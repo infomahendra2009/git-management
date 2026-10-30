@@ -1,0 +1,329 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id                 String   @id @default(uuid()) @db.Char(36)
+  userCode           String   @unique @db.VarChar(40)
+  name               String   @db.VarChar(120)
+  email              String   @unique @db.VarChar(190)
+  phone              String   @unique @db.VarChar(20)
+  passwordHash       String   @db.VarChar(100)
+  role               Role
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(true)
+  createdById        String?  @db.Char(36)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  lastLoginAt        DateTime?
+  failedLogins       Int      @default(0)
+  lockedUntil        DateTime?
+
+  otpCodes OtpCode[]
+  questions  Question[]
+  media      Media[]
+  importLogs ImportLog[]
+  classes         Class[]
+  memberships     ClassMember[]
+  quizzes         Quiz[]
+  quizAssignments QuizAssignment[]
+  attempts        Attempt[]
+
+  @@index([role])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String   @db.Char(36)
+  codeHash  String   @db.VarChar(100)
+  channel   String   @db.VarChar(10)
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Char(36)
+  actorId    String?  @db.Char(36)
+  action     String   @db.VarChar(60)
+  targetType String?  @db.VarChar(40)
+  targetId   String?  @db.VarChar(40)
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id @db.VarChar(80)
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTIPLE_SELECT
+  TRUE_FALSE
+  TEXT_INPUT
+  ESSAY
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MatchMode {
+  EXACT
+  CONTAINS
+}
+
+model Question {
+  id              String       @id @default(uuid()) @db.Char(36)
+  ownerId         String       @db.Char(36)
+  externalId      String?      @db.VarChar(60)
+  type            QuestionType
+  text            String       @db.Text
+  imageUrl        String?      @db.VarChar(500)
+  imageAlt        String?      @db.VarChar(255)
+  points          Float        @default(1)
+  explanation     String?      @db.Text
+  category        String?      @db.VarChar(80)
+  difficulty      Difficulty?
+  timeLimit       Int?
+  shuffleOptions  Boolean      @default(false)
+  partialScoring  Boolean      @default(false)
+  caseSensitive   Boolean      @default(false)
+  matchMode       MatchMode    @default(EXACT)
+  tfAnswer        Boolean?
+  acceptedAnswers Json
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  owner   User             @relation(fields: [ownerId], references: [id])
+  options QuestionOption[]
+  quizQuestions QuizQuestion[]
+
+  @@unique([ownerId, externalId])
+  @@index([ownerId, category])
+  @@index([ownerId, type])
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid()) @db.Char(36)
+  questionId String  @db.Char(36)
+  position   Int
+  text       String  @db.VarChar(500)
+  imageUrl   String? @db.VarChar(500)
+  isCorrect  Boolean @default(false)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model Media {
+  id           String   @id @default(uuid()) @db.Char(36)
+  ownerId      String   @db.Char(36)
+  filename     String   @db.VarChar(80)
+  originalName String   @db.VarChar(255)
+  mime         String   @db.VarChar(40)
+  size         Int
+  createdAt    DateTime @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id])
+}
+
+model ImportLog {
+  id        String   @id @default(uuid()) @db.Char(36)
+  ownerId   String   @db.Char(36)
+  filename  String   @db.VarChar(255)
+  mode      String   @db.VarChar(10)
+  status    String   @db.VarChar(10)
+  total     Int      @default(0)
+  created   Int      @default(0)
+  updated   Int      @default(0)
+  errors    Json?
+  createdAt DateTime @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@index([ownerId, createdAt])
+}
+
+enum QuizStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum QuestionOrder {
+  SEQUENTIAL
+  RANDOM
+}
+
+enum ReleaseMode {
+  IMMEDIATE
+  MANUAL
+  SCHEDULED
+  NEVER
+}
+
+enum ReleaseState {
+  DEFAULT
+  RELEASED
+  HIDDEN
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+model Class {
+  id          String   @id @default(uuid()) @db.Char(36)
+  name        String   @db.VarChar(120)
+  ownerId     String   @db.Char(36)
+  createdAt   DateTime @default(now())
+
+  owner       User             @relation(fields: [ownerId], references: [id])
+  members     ClassMember[]
+  assignments QuizAssignment[]
+
+  @@index([ownerId])
+}
+
+model ClassMember {
+  classId   String @db.Char(36)
+  studentId String @db.Char(36)
+
+  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student User  @relation(fields: [studentId], references: [id])
+
+  @@id([classId, studentId])
+  @@index([studentId])
+}
+
+model Quiz {
+  id                 String        @id @default(uuid()) @db.Char(36)
+  ownerId            String        @db.Char(36)
+  title              String        @db.VarChar(200)
+  description        String?       @db.Text
+  status             QuizStatus    @default(DRAFT)
+  passPercent        Float         @default(50)
+  timeLimitMinutes   Int?
+  attemptsAllowed    Int           @default(1)
+  questionOrder      QuestionOrder @default(SEQUENTIAL)
+  oneAtATime         Boolean       @default(true)
+  showProgress       Boolean       @default(true)
+  allowReview        Boolean       @default(true)
+  releaseMode        ReleaseMode   @default(MANUAL)
+  releaseAt          DateTime?
+  showCorrectAnswers Boolean       @default(true)
+  showExplanations   Boolean       @default(true)
+  startsAt           DateTime?
+  endsAt             DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  owner       User             @relation(fields: [ownerId], references: [id])
+  questions   QuizQuestion[]
+  assignments QuizAssignment[]
+  attempts    Attempt[]
+
+  @@index([ownerId])
+}
+
+model QuizQuestion {
+  id         String @id @default(uuid()) @db.Char(36)
+  quizId     String @db.Char(36)
+  questionId String @db.Char(36)
+  position   Int
+
+  quiz     Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@unique([quizId, questionId])
+  @@index([quizId, position])
+}
+
+model QuizAssignment {
+  id        String  @id @default(uuid()) @db.Char(36)
+  quizId    String  @db.Char(36)
+  classId   String? @db.Char(36)
+  studentId String? @db.Char(36)
+
+  quiz    Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  class   Class? @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student User?  @relation(fields: [studentId], references: [id])
+
+  @@unique([quizId, classId])
+  @@unique([quizId, studentId])
+}
+
+model Attempt {
+  id            String        @id @default(uuid()) @db.Char(36)
+  quizId        String        @db.Char(36)
+  studentId     String        @db.Char(36)
+  attemptNo     Int
+  status        AttemptStatus @default(IN_PROGRESS)
+  startedAt     DateTime      @default(now())
+  deadlineAt    DateTime?
+  submittedAt   DateTime?
+  autoSubmitted Boolean       @default(false)
+  score         Float?
+  maxScore      Float?
+  percent       Float?
+  passed        Boolean?
+  releaseState  ReleaseState  @default(DEFAULT)
+  needsGrading  Boolean       @default(false)
+
+  quiz      Quiz              @relation(fields: [quizId], references: [id])
+  student   User              @relation(fields: [studentId], references: [id])
+  questions AttemptQuestion[]
+
+  @@unique([quizId, studentId, attemptNo])
+  @@index([status, deadlineAt])
+  @@index([needsGrading, status])
+  @@index([studentId])
+}
+
+// Each attempt keeps its own frozen copy (snapshot) of every question, so later
+// edits to the question bank never change an attempt in progress or its grade.
+model AttemptQuestion {
+  id           String   @id @default(uuid()) @db.Char(36)
+  attemptId    String   @db.Char(36)
+  position     Int
+  questionId   String?  @db.Char(36)
+  snapshot     Json
+  points       Float
+  answer       Json?
+  flagged      Boolean  @default(false)
+  isCorrect    Boolean?
+  score        Float?
+  spentSeconds Int      @default(0)
+  gradedAt     DateTime?
+  gradedById   String?  @db.Char(36)
+  feedback     String?  @db.Text
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, position])
+}

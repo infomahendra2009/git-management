@@ -1,0 +1,43 @@
+{
+  "port": "8070",
+  "inactivityTime": 3600000,
+  "projectType": "poc",  
+  "apiUrl": "http://admin.nms.com",
+  "apiUrlIP": "http://10.254.245.141",
+  "msApiUrl": "",
+  "socketPort":"5901",
+  "isLDAP": "",
+  "socketHost":"10.254.245.141", 
+  "socketUrl":"ws",
+  "socketPath":"websockify",
+  "patternCode": "@uiti@1#cw(c#5u1wc#1@itiu@@uiti@1#cw",
+  "source": "SNOC",
+  "country":"District",
+  "state":"Block",
+  "city":"Gram Panchayat",
+  "sourceListTopo":"oru",
+ "topoDefaultView":"cose",
+  "projectState":"Punjab",
+  "projectPhase":"Phase3",
+  "apiUrlAutoLogin": "",
+  "autoLogin": "",
+   "quickLinks": [
+    { 
+  "name": "Alarm Intelligence",
+  "link": "http://10.254.245.138:8086"
+}
+  ],
+  "sourceEMSUrl":{
+    "percipient_nms": "",
+    "oru": " ",
+    "smartRack_veekay": "https://jsonviewer.stack.hu/",
+    "smartRack_exicom": "https://www.google.com/",
+    "smart_rack_delta": "https://jsonviewer.stack.hu/",
+    "rfms_exfo": "https://jsonviewer.stack.hu/",
+    "tejas": "https://jsonviewer.stack.hu/",
+    "rfms_viavi": "https://jsonviewer.stack.hu/",
+    "smart_rack_sidhivinayak": "https://jsonviewer.stack.hu/"  
+  }
+
+
+}
