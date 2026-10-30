@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root { --bg:#f6f7f9; --card:#fff; --text:#1c2230; --muted:#6b7280; --brand:#2f5bea; --border:#e3e6ec; --danger:#c62828; }
 @media (prefers-color-scheme: dark) {
   :root { --bg:#12151c; --card:#1b2030; --text:#e8ebf2; --muted:#9aa3b5; --brand:#6f8cff; --border:#2c3347; --danger:#ff6b6b; }
@@ -35,6 +37,10 @@ textarea { width:100%; padding:10px; border:1px solid var(--border); border-radi
 .check input { width:auto; }
 .picker-check { flex:0 0 auto; min-width:0; margin:0; }
 .picker-check input, .table-wrap td input[type="checkbox"] { width:auto; }
+.picker-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--card); }
+.picker-pages { display:flex; align-items:center; gap:4px; }
+.picker-pages .page-number { min-width:36px; padding:6px 9px; }
+.picker-pages .page-number[aria-current="page"] { background:var(--brand); color:#fff; }
 .opt { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; }
 .opt .grow { flex:1; }
 .thumb { max-height:90px; max-width:100%; border-radius:6px; margin-top:6px; display:block; }

@@ -96,6 +96,15 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
   const move = (i, d) => setSel((p) => { const a = [...p]; const j = i + d; if (j < 0 || j >= a.length) return p; [a[i], a[j]] = [a[j], a[i]]; return a; });
   const total = sel.reduce((s, x) => s + Number(x.points), 0);
   const pages = Math.max(1, Math.ceil(data.total / data.pageSize));
+  const pageButtons = pages <= 7
+    ? Array.from({ length: pages }, (_, index) => index + 1)
+    : [...new Set([1, data.page - 1, data.page, data.page + 1, pages].filter((page) => page >= 1 && page <= pages))]
+      .sort((a, b) => a - b)
+      .reduce((items, page, index, list) => {
+        if (index > 0 && page - list[index - 1] > 1) items.push(`ellipsis-${page}`);
+        items.push(page);
+        return items;
+      }, []);
   const search = (e) => { e.preventDefault(); const next = { ...filters }; setAppliedFilters(next); load(1, next); };
   const togglePending = (item, checked) => setPending((current) => (
     checked
@@ -152,8 +161,9 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
         {msg && <div className="ok">{msg}</div>}{err && <div className="err">{err}</div>}
         <div style={{ marginTop: 12 }}><button disabled={locked} onClick={save}>Save questions</button></div>
       </div>
-      <div className="card">
-        <h3>Question bank</h3>
+      <div className="card shadow-sm">
+        <h3 className="mb-1">Question bank</h3>
+        <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Filter your bank, select questions, then add them to this quiz.</p>
         <form className="row" onSubmit={search}>
           <input placeholder="Search text or question ID" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
           <select aria-label="Filter by question type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
@@ -178,11 +188,14 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
           </button>
           {pending.length > 0 && <button type="button" className="secondary small" onClick={() => setPending([])}>Clear selected</button>}
         </div>
-        <div className="table-wrap" style={{ marginTop: 10 }}>
-          <table>
+        <div className="table-wrap mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+          <table className="min-w-[720px]">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+              <tr><th>Select</th><th>Question</th><th>Type</th><th>Category</th><th>Points</th><th>Action</th></tr>
+            </thead>
             <tbody>
               {data.items.map((b) => (
-                <tr key={b.id}>
+                <tr key={b.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td><input aria-label={`Select question: ${b.text || 'image question'}`} type="checkbox" checked={has(b.id) || pendingIds.has(b.id)} disabled={locked || has(b.id)} onChange={(e) => togglePending({ id: b.id, text: b.text, type: b.type, points: b.points }, e.target.checked)} /></td>
                   <td style={{ whiteSpace: 'normal', minWidth: 200 }}>{b.text || '(image question)'}</td><td>{b.type}</td><td>{b.category || ''}</td><td>{b.points} pt</td>
                   <td><button disabled={locked || has(b.id) || pendingIds.has(b.id)} className="secondary small" onClick={() => setSel([...sel, { id: b.id, text: b.text, type: b.type, points: b.points }])}>{has(b.id) ? 'Added' : pendingIds.has(b.id) ? 'Selected' : 'Add'}</button></td>
@@ -192,10 +205,15 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
             </tbody>
           </table>
         </div>
-        <div className="row" style={{ marginTop: 12 }}>
+        <div className="picker-pagination shadow-sm">
           <span className="muted">{data.total} questions · page {data.page} of {pages}</span>
-          <button type="button" className="secondary small" disabled={busy || data.page <= 1} onClick={() => load(data.page - 1, appliedFilters)}>Previous</button>
-          <button type="button" className="secondary small" disabled={busy || data.page >= pages} onClick={() => load(data.page + 1, appliedFilters)}>Next</button>
+          <nav className="picker-pages" aria-label="Question bank pages">
+            <button type="button" className="secondary small" disabled={busy || data.page <= 1} onClick={() => load(data.page - 1, appliedFilters)}>Previous</button>
+            {pageButtons.map((page) => typeof page === 'number'
+              ? <button key={page} type="button" className="secondary small page-number" aria-label={`Page ${page}`} aria-current={page === data.page ? 'page' : undefined} disabled={busy || page === data.page} onClick={() => load(page, appliedFilters)}>{page}</button>
+              : <span key={page} className="px-1 text-slate-400" aria-hidden="true">…</span>)}
+            <button type="button" className="secondary small" disabled={busy || data.page >= pages} onClick={() => load(data.page + 1, appliedFilters)}>Next</button>
+          </nav>
         </div>
       </div>
     </>
