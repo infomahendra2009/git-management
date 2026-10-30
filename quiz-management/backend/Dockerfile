@@ -1,8 +1,8 @@
-FROM node:20-slim
+FROM node:26-slim
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package*.json ./
+RUN npm ci
 COPY . .
 RUN sed -i 's/\r$//' docker-entrypoint.sh
 RUN npx prisma generate

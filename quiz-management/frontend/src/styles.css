@@ -33,6 +33,8 @@ th, td { text-align:left; padding:8px; border-bottom:1px solid var(--border); wh
 textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:15px; font-family:inherit; min-height:80px; }
 .check { display:flex; align-items:center; gap:8px; margin:10px 0 0; color:var(--text); font-size:14px; }
 .check input { width:auto; }
+.picker-check { flex:0 0 auto; min-width:0; margin:0; }
+.picker-check input, .table-wrap td input[type="checkbox"] { width:auto; }
 .opt { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; }
 .opt .grow { flex:1; }
 .thumb { max-height:90px; max-width:100%; border-radius:6px; margin-top:6px; display:block; }

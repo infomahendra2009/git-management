@@ -66,17 +66,60 @@ function Settings({ s, setS, onSave, busy, isNew }) {
 /* ---------------- Questions picker ---------------- */
 function QuizQuestions({ quizId, initial, locked, onSaved }) {
   const [sel, setSel] = useState(initial);
-  const [bank, setBank] = useState([]);
-  const [q, setQ] = useState('');
+  const [pending, setPending] = useState([]);
+  const [data, setData] = useState({ items: [], total: 0, page: 1, pageSize: 20 });
+  const [categories, setCategories] = useState([]);
+  const [filters, setFilters] = useState({ q: '', type: '', category: '', difficulty: '' });
+  const [appliedFilters, setAppliedFilters] = useState({ q: '', type: '', category: '', difficulty: '' });
+  const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
 
-  const search = (text = q) => api(`/questions?pageSize=50${text ? `&q=${encodeURIComponent(text)}` : ''}`).then((r) => setBank(r.items)).catch((e) => setErr(e.message));
-  useEffect(() => { search(''); }, []);
+  const load = async (page, selectedFilters) => {
+    setBusy(true);
+    setErr('');
+    const params = new URLSearchParams({ page, pageSize: data.pageSize });
+    Object.entries(selectedFilters).forEach(([key, value]) => { if (value) params.set(key, value); });
+    try { setData(await api(`/questions?${params}`)); }
+    catch (e) { setErr(e.message); }
+    finally { setBusy(false); }
+  };
+  useEffect(() => {
+    api('/questions/categories').then((r) => setCategories(r.categories)).catch((e) => setErr(e.message));
+    load(1, appliedFilters);
+  }, []);
 
   const has = (id) => sel.some((x) => x.id === id);
+  const pendingIds = new Set(pending.map((x) => x.id));
+  const availableOnPage = data.items.filter((item) => !has(item.id));
+  const allPageSelected = availableOnPage.length > 0 && availableOnPage.every((item) => pendingIds.has(item.id));
   const move = (i, d) => setSel((p) => { const a = [...p]; const j = i + d; if (j < 0 || j >= a.length) return p; [a[i], a[j]] = [a[j], a[i]]; return a; });
   const total = sel.reduce((s, x) => s + Number(x.points), 0);
+  const pages = Math.max(1, Math.ceil(data.total / data.pageSize));
+  const search = (e) => { e.preventDefault(); const next = { ...filters }; setAppliedFilters(next); load(1, next); };
+  const togglePending = (item, checked) => setPending((current) => (
+    checked
+      ? current.some((x) => x.id === item.id) ? current : [...current, item]
+      : current.filter((x) => x.id !== item.id)
+  ));
+  const togglePage = () => {
+    if (allPageSelected) {
+      const pageIds = new Set(availableOnPage.map((item) => item.id));
+      setPending((current) => current.filter((item) => !pageIds.has(item.id)));
+    } else {
+      setPending((current) => {
+        const ids = new Set(current.map((item) => item.id));
+        return [...current, ...availableOnPage.filter((item) => !ids.has(item.id))];
+      });
+    }
+  };
+  const addPending = () => {
+    setSel((current) => {
+      const ids = new Set(current.map((item) => item.id));
+      return [...current, ...pending.filter((item) => !ids.has(item.id))];
+    });
+    setPending([]);
+  };
 
   const save = async () => {
     setErr(''); setMsg('');
@@ -111,19 +154,48 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
       </div>
       <div className="card">
         <h3>Question bank</h3>
-        <div className="row"><input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && search()} /><button className="secondary" onClick={() => search()}>Search</button></div>
+        <form className="row" onSubmit={search}>
+          <input placeholder="Search text or question ID" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
+          <select aria-label="Filter by question type" value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
+            <option value="">All types</option><option value="MULTIPLE_CHOICE">Multiple choice</option><option value="MULTIPLE_SELECT">Multiple select</option><option value="TRUE_FALSE">True/False</option><option value="TEXT_INPUT">Text input</option><option value="ESSAY">Essay</option>
+          </select>
+          <select aria-label="Filter by category" value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
+            <option value="">All categories</option>{categories.map((category) => <option key={category} value={category}>{category}</option>)}
+          </select>
+          <select aria-label="Filter by difficulty" value={filters.difficulty} onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}>
+            <option value="">Any difficulty</option><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option>
+          </select>
+          <button disabled={busy}>Search</button>
+        </form>
+        {err && <div className="err">{err}</div>}
+        <div className="row" style={{ marginTop: 12 }}>
+          <label className="check picker-check">
+            <input type="checkbox" checked={allPageSelected} disabled={locked || availableOnPage.length === 0} onChange={togglePage} />
+            Select all on this page
+          </label>
+          <button type="button" className="secondary small" disabled={locked || pending.length === 0} onClick={addPending}>
+            Add selected{pending.length ? ` (${pending.length})` : ''}
+          </button>
+          {pending.length > 0 && <button type="button" className="secondary small" onClick={() => setPending([])}>Clear selected</button>}
+        </div>
         <div className="table-wrap" style={{ marginTop: 10 }}>
           <table>
             <tbody>
-              {bank.map((b) => (
+              {data.items.map((b) => (
                 <tr key={b.id}>
+                  <td><input aria-label={`Select question: ${b.text || 'image question'}`} type="checkbox" checked={has(b.id) || pendingIds.has(b.id)} disabled={locked || has(b.id)} onChange={(e) => togglePending({ id: b.id, text: b.text, type: b.type, points: b.points }, e.target.checked)} /></td>
                   <td style={{ whiteSpace: 'normal', minWidth: 200 }}>{b.text || '(image question)'}</td><td>{b.type}</td><td>{b.category || ''}</td><td>{b.points} pt</td>
-                  <td><button disabled={locked || has(b.id)} className="secondary small" onClick={() => setSel([...sel, { id: b.id, text: b.text, type: b.type, points: b.points }])}>{has(b.id) ? 'Added' : 'Add'}</button></td>
+                  <td><button disabled={locked || has(b.id) || pendingIds.has(b.id)} className="secondary small" onClick={() => setSel([...sel, { id: b.id, text: b.text, type: b.type, points: b.points }])}>{has(b.id) ? 'Added' : pendingIds.has(b.id) ? 'Selected' : 'Add'}</button></td>
                 </tr>
               ))}
-              {bank.length === 0 && <tr><td className="muted">No questions found</td></tr>}
+              {data.items.length === 0 && <tr><td colSpan={6} className="muted">{busy ? 'Loading questions…' : 'No questions found'}</td></tr>}
             </tbody>
           </table>
+        </div>
+        <div className="row" style={{ marginTop: 12 }}>
+          <span className="muted">{data.total} questions · page {data.page} of {pages}</span>
+          <button type="button" className="secondary small" disabled={busy || data.page <= 1} onClick={() => load(data.page - 1, appliedFilters)}>Previous</button>
+          <button type="button" className="secondary small" disabled={busy || data.page >= pages} onClick={() => load(data.page + 1, appliedFilters)}>Next</button>
         </div>
       </div>
     </>
