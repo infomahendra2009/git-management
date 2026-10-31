@@ -40,6 +40,9 @@ model User {
   quizzes         Quiz[]
   quizAssignments QuizAssignment[]
   attempts        Attempt[]
+  solarSystemStudentAssignment SolarSystemStudentAssignment? @relation("SolarSystemStudent")
+  solarSystemAssignedStudents SolarSystemStudentAssignment[] @relation("SolarSystemStudentAssignedBy")
+  solarSystemClassAssignments SolarSystemClassAssignment[] @relation("SolarSystemClassAssignedBy")
 
   @@index([role])
 }
@@ -222,6 +225,7 @@ model Class {
   owner       User             @relation(fields: [ownerId], references: [id])
   members     ClassMember[]
   assignments QuizAssignment[]
+  solarSystemAssignment SolarSystemClassAssignment?
 
   @@index([ownerId])
 }
@@ -235,6 +239,28 @@ model ClassMember {
 
   @@id([classId, studentId])
   @@index([studentId])
+}
+
+model SolarSystemStudentAssignment {
+  studentId   String   @id @db.Char(36)
+  assignedById String  @db.Char(36)
+  assignedAt  DateTime @default(now())
+
+  student   User @relation("SolarSystemStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  assignedBy User @relation("SolarSystemStudentAssignedBy", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  @@index([assignedById])
+}
+
+model SolarSystemClassAssignment {
+  classId     String   @id @db.Char(36)
+  assignedById String  @db.Char(36)
+  assignedAt  DateTime @default(now())
+
+  class      Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  assignedBy User  @relation("SolarSystemClassAssignedBy", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  @@index([assignedById])
 }
 
 model Quiz {

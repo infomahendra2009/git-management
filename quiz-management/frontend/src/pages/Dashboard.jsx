@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { api } from '../api.js';
 import Users from './Users.jsx';
 import Questions from './Questions.jsx';
 import Classes from './Classes.jsx';
@@ -10,6 +11,7 @@ import Grading from './Grading.jsx';
 import AuditLog from './AuditLog.jsx';
 import TakeQuiz from './TakeQuiz.jsx';
 import ChangePassword from './ChangePassword.jsx';
+import SolarSystemModule, { SolarSystemAssignments } from './SolarSystemModule.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Admin', TEACHER: 'Teacher', STUDENT: 'Student' };
 
@@ -18,14 +20,23 @@ export default function Dashboard({ user, onLogout }) {
   const [taking, setTaking] = useState(null);
   const [changingPassword, setChangingPassword] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [solarSystemAssigned, setSolarSystemAssigned] = useState(false);
+  const [solarAccessError, setSolarAccessError] = useState('');
   const isAdmin = user.role === 'ADMIN';
   const isStaff = isAdmin || user.role === 'TEACHER';
+
+  useEffect(() => {
+    if (isStaff) return;
+    api('/learning-module/access')
+      .then((result) => setSolarSystemAssigned(result.assigned))
+      .catch((error) => setSolarAccessError(error.message));
+  }, [isStaff]);
 
   if (taking) return <TakeQuiz attemptId={taking} onExit={() => { setTaking(null); setRefresh((n) => n + 1); setTab('myquizzes'); }} />;
 
   const tabs = isStaff
-    ? [['home', 'Home'], ['quizzes', 'Quizzes'], ['grading', 'Grading'], ['reports', 'Reports'], ['questions', 'Questions'], ['classes', 'Classes'], ['users', isAdmin ? 'Users' : 'Students'], ...(isAdmin ? [['audit', 'Audit log']] : [])]
-    : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results']];
+    ? [['home', 'Home'], ['quizzes', 'Quizzes'], ['grading', 'Grading'], ['reports', 'Reports'], ['questions', 'Questions'], ['classes', 'Classes'], ['users', isAdmin ? 'Users' : 'Students'], ...(isAdmin ? [['solar-module', 'Solar System'], ['india-map', 'India map'], ['audit', 'Audit log']] : [])]
+    : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results'], ...(solarSystemAssigned ? [['solar-learning', 'Learning module'], ['india-map', 'India map']] : [])];
 
   return (
     <div className={isStaff ? 'app-shell staff-shell' : 'app-shell student-shell'}>
@@ -49,13 +60,14 @@ export default function Dashboard({ user, onLogout }) {
       <div className="container portal-main">
         <nav className={isStaff ? 'tabs portal-tabs staff-tabs' : 'tabs portal-tabs'} aria-label="Main navigation">
           {tabs.map(([k, label]) => (
-            <button key={k} className={tab === k ? 'active' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => setTab(k)}>
+            <button key={k} className={tab === k ? 'active' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => { setTab(k); setChangingPassword(false); }}>
               {label}
             </button>
           ))}
         </nav>
 
         {changingPassword && <ChangePassword onDone={() => setChangingPassword(false)} />}
+        {!isStaff && solarAccessError && <div className="card err" role="alert">Could not check your learning modules: {solarAccessError}</div>}
         {!changingPassword && tab === 'home' && (
           isStaff
             ? <div className="card staff-welcome">
@@ -81,6 +93,9 @@ export default function Dashboard({ user, onLogout }) {
         {!changingPassword && tab === 'grading' && isStaff && <Grading />}
         {!changingPassword && tab === 'reports' && isStaff && <Reports user={user} />}
         {!changingPassword && tab === 'audit' && isAdmin && <AuditLog />}
+        {!changingPassword && tab === 'solar-module' && isAdmin && <SolarSystemAssignments />}
+        {!changingPassword && tab === 'solar-learning' && !isStaff && solarSystemAssigned && <SolarSystemModule />}
+        {!changingPassword && tab === 'india-map' && (isAdmin || (!isStaff && solarSystemAssigned)) && <SolarSystemModule initialPage={4} />}
         {!changingPassword && tab === 'questions' && isStaff && <Questions user={user} />}
         {!changingPassword && tab === 'classes' && isStaff && <Classes />}
         {!changingPassword && tab === 'users' && isStaff && <Users canManage={isAdmin} />}

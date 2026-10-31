@@ -320,6 +320,197 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
 .result-confetti i:nth-child(4n+3) { background:#ef7b86; }
 @keyframes result-confetti-fall { 0% { opacity:0; transform:translate3d(0,-8vh,0) rotate(0); } 12% { opacity:.9; } 100% { opacity:0; transform:translate3d(35px,105vh,0) rotate(680deg); } }
 
+/* Solar System learning module */
+.solar-admin,.solar-learning { display:grid; gap:18px; }
+.solar-admin-hero { position:relative; overflow:hidden; background:radial-gradient(circle at 90% 25%,rgba(104,115,255,.2),transparent 25%),linear-gradient(135deg,#171b38,#282551 66%,#474283); color:#fff; }
+.solar-admin-hero .eyebrow { color:#b9b5ff; }
+.solar-admin-hero h1,.solar-learning-hero h1 { margin:0 0 8px; font-size:clamp(26px,4vw,36px); letter-spacing:-1px; }
+.solar-admin-hero p { max-width:700px; margin:0; color:#d5d7ee; line-height:1.65; }
+.solar-admin-counts { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.solar-admin-counts > span { padding:8px 11px; border:1px solid rgba(255,255,255,.18); border-radius:10px; background:rgba(255,255,255,.08); color:#e4e6f8; font-size:12px; }
+.solar-admin-counts strong { color:#fff; }
+.solar-assignment-card { padding:0; overflow:hidden; }
+.solar-assignment-tabs { width:100%; margin:0; padding:8px; border:0; border-bottom:1px solid var(--border); border-radius:0; box-shadow:none; }
+.solar-assignment-tabs button { display:flex; align-items:center; gap:8px; }
+.solar-assignment-tabs button span { display:grid; min-width:20px; height:20px; place-items:center; border-radius:99px; background:var(--portal-lilac); color:var(--brand); font-size:10px; }
+.solar-target-list { display:grid; max-height:430px; overflow:auto; padding:8px 22px; }
+.solar-target { display:flex; align-items:center; gap:13px; min-height:66px; margin:0; padding:10px 6px; border-bottom:1px solid var(--border); color:var(--text); cursor:pointer; }
+.solar-target:last-child { border-bottom:0; }
+.solar-target > input { flex:0 0 auto; width:17px; height:17px; margin:0; accent-color:var(--brand); }
+.solar-target > span:last-child { display:grid; gap:3px; min-width:0; }
+.solar-target strong { color:var(--portal-ink); font-size:13px; }
+.solar-target small { overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; }
+.solar-target-icon,.solar-target-avatar { display:grid; flex:0 0 36px; width:36px; height:36px; place-items:center; border-radius:12px; background:var(--portal-lilac); color:var(--brand); font-size:16px; font-weight:800; }
+.solar-target-avatar { border-radius:50%; background:#e8f4ff; color:#357ac9; font-size:13px; }
+.solar-search-label { margin:14px 22px 4px; }
+.solar-search { width:calc(100% - 44px); margin:0 22px 8px; }
+.solar-assignment-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 22px; border-top:1px solid var(--border); background:color-mix(in srgb,var(--bg) 62%,var(--card)); }
+.solar-assignment-actions .muted { font-size:11px; }
+.solar-learning-hero { position:relative; display:flex; min-height:180px; align-items:center; justify-content:space-between; gap:25px; overflow:hidden; padding:30px 34px; border-radius:20px; background:radial-gradient(circle at 87% 45%,rgba(107,121,255,.24),transparent 21%),linear-gradient(120deg,#171b38,#272650 64%,#373866); color:#fff; }
+.solar-learning-hero .eyebrow { color:#b9b5ff; }
+.solar-learning-hero p { max-width:690px; margin:0; color:#d6d8ee; font-size:13px; line-height:1.7; }
+.solar-hero-orb { display:grid; flex:0 0 86px; width:86px; height:86px; place-items:center; border:1px solid rgba(255,255,255,.22); border-radius:50%; background:radial-gradient(circle at 33% 30%,#fff5b4,#ffc353 25%,#ee7a43 57%,#673d89 100%); box-shadow:0 0 55px rgba(249,179,93,.25); color:#fff4d5; font-size:26px; }
+.solar-lesson-nav { display:flex; flex-wrap:wrap; gap:8px; overflow:visible; padding:6px; border:1px solid var(--border); border-radius:15px; background:var(--card); }
+.solar-lesson-nav button { display:flex; flex:1 1 145px; align-items:center; gap:9px; padding:10px 13px; background:transparent; color:var(--muted); box-shadow:none; font-size:12px; }
+.solar-lesson-nav button > span { display:grid; width:24px; height:24px; place-items:center; border-radius:8px; background:var(--bg); color:var(--muted); font-size:10px; }
+.solar-lesson-nav button.active { background:var(--portal-lilac); color:var(--brand); box-shadow:none; }
+.solar-lesson-nav button.active > span { background:var(--brand); color:#fff; }
+.solar-explorer-card { overflow:hidden; padding:15px; border:1px solid var(--border); border-radius:20px; background:var(--card); box-shadow:var(--portal-shadow); }
+.solar-scene-viewport { position:relative; max-width:880px; margin:auto; overflow:hidden; border-radius:15px; background:#090d1e; }
+.solar-scene { position:relative; width:100%; aspect-ratio:1.75; min-height:310px; overflow:hidden; border-radius:15px; background:radial-gradient(ellipse at center,#171d3c,#090d1e 72%); }
+.solar-world { position:absolute; inset:0; transform:scale(var(--solar-zoom,1)); transition:transform .2s ease; }
+.solar-scene:before,.solar-scene:after { position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(1px 1px at 14% 20%,#fff 60%,transparent),radial-gradient(1px 1px at 81% 13%,#fff 60%,transparent),radial-gradient(1px 1px at 62% 78%,#fff 60%,transparent),radial-gradient(1px 1px at 30% 74%,#fff 60%,transparent),radial-gradient(1px 1px at 90% 55%,#fff 60%,transparent); background-size:190px 160px; content:""; opacity:.55; }
+.solar-scene:after { background-position:65px 42px; opacity:.25; }
+.solar-sun { position:absolute; z-index:2; top:50%; left:50%; display:grid; width:clamp(35px,7vw,62px); aspect-ratio:1; place-items:center; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff6b8,#ffc353 28%,#ef713c 67%,#ba3d39); box-shadow:0 0 18px #ffae55,0 0 46px rgba(255,150,62,.62); color:#402337; font-size:clamp(7px,1vw,10px); font-weight:900; transform:translate(-50%,-50%); }
+.solar-orbit { position:absolute; z-index:3; top:50%; left:50%; display:block; width:var(--orbit-size); aspect-ratio:1.72; padding:0; border:1px solid rgba(194,204,255,.23); border-radius:50%; background:transparent; box-shadow:none; transform:translate(-50%,-50%) rotateX(68deg); animation:solar-orbit-spin var(--orbit-duration) linear infinite; pointer-events:none; }
+.solar-orbit:not(:disabled):hover { border-color:rgba(194,204,255,.64); box-shadow:0 0 9px rgba(173,184,255,.2); transform:translate(-50%,-50%) rotateX(68deg); }
+.solar-orbit.selected { border-color:rgba(194,204,255,.63); }
+.solar-planet { position:absolute; top:50%; right:-1px; display:block; width:var(--planet-size); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 30% 28%,color-mix(in srgb,var(--planet-color),white 50%),var(--planet-color) 45%,color-mix(in srgb,var(--planet-color),black 38%)); box-shadow:0 0 9px color-mix(in srgb,var(--planet-color),transparent 30%); transform:translate(50%,-50%) rotateX(-68deg); pointer-events:auto; cursor:pointer; }
+.solar-scene-size .solar-planet { transform:translate(50%,-50%) rotateX(-68deg) scale(1.45); }
+.solar-planet-label { position:absolute; top:calc(50% + 13px); right:-16px; padding:3px 6px; border-radius:6px; background:rgba(10,14,30,.8); color:#fff; font-size:9px; white-space:nowrap; transform:translateX(50%) rotateX(-68deg); }
+.solar-scene-flat .solar-orbit,.solar-scene-flat .solar-orbit:not(:disabled):hover { transform:translate(-50%,-50%); animation-name:solar-orbit-spin-flat; }
+.solar-scene-flat .solar-planet,.solar-scene-flat .solar-planet-label { transform:translate(50%,-50%); }
+@keyframes solar-orbit-spin { to { transform:translate(-50%,-50%) rotateX(68deg) rotateZ(360deg); } }
+@keyframes solar-orbit-spin-flat { to { transform:translate(-50%,-50%) rotateZ(360deg); } }
+.solar-zoom-controls { position:absolute; top:12px; right:12px; z-index:5; display:flex; align-items:center; gap:6px; padding:5px; border:1px solid rgba(255,255,255,.16); border-radius:12px; background:rgba(8,12,27,.82); color:#f4f5ff; backdrop-filter:blur(8px); }
+.solar-zoom-controls button { display:grid; width:31px; height:31px; place-items:center; padding:0; border-color:rgba(255,255,255,.25); color:#fff; font-size:18px; }
+.solar-zoom-controls > span { min-width:42px; text-align:center; font-size:10px; font-variant-numeric:tabular-nums; }
+.solar-zoom-controls .solar-reset-zoom { width:auto; padding:0 9px; font-size:10px; }
+.solar-controls { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:13px 5px 2px; }
+.solar-controls label { display:flex; align-items:center; gap:9px; margin:0; color:var(--muted); font-size:11px; }
+.solar-controls input[type="range"] { width:130px; height:auto; padding:0; accent-color:var(--brand); }
+.solar-3d-toggle { cursor:pointer; }
+.solar-3d-toggle input,.solar-mode-options input { width:auto; margin:0; accent-color:var(--brand); }
+.solar-mode-options { display:flex; align-items:center; gap:12px; margin:0; padding:0; border:0; }
+.solar-mode-options legend { float:left; margin-right:4px; color:var(--muted); font-size:10px; }
+.solar-mode-options label { gap:5px; cursor:pointer; text-transform:capitalize; }
+.solar-speed-control { display:grid !important; gap:5px !important; }
+.solar-speed-control > span { display:flex; justify-content:space-between; gap:14px; }
+.solar-speed-control strong { color:var(--brand); }
+.solar-planet-selector { display:flex; gap:4px; overflow-x:auto; margin:10px 0 0; padding:5px; border:1px solid var(--border); border-radius:13px; background:var(--card); }
+.solar-planet-selector button { display:flex; flex:1 0 auto; align-items:center; justify-content:center; gap:6px; padding:8px 10px; background:transparent; color:var(--muted); box-shadow:none; font-size:11px; }
+.solar-planet-selector button:hover { transform:none; background:var(--bg); box-shadow:none; }
+.solar-planet-selector button.active { background:var(--portal-lilac); color:var(--brand); }
+.solar-selector-dot { display:block; width:9px; height:9px; border-radius:50%; background:var(--planet-color); box-shadow:0 0 6px color-mix(in srgb,var(--planet-color),transparent 25%); }
+.solar-planet-fact { display:flex; align-items:center; gap:18px; padding:20px 24px; border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--portal-shadow); }
+.solar-fact-planet,.solar-card-planet { display:block; flex:0 0 48px; width:48px; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 30% 28%,color-mix(in srgb,var(--planet-color),white 48%),var(--planet-color) 45%,color-mix(in srgb,var(--planet-color),black 38%)); box-shadow:0 5px 16px color-mix(in srgb,var(--planet-color),transparent 65%); }
+.solar-planet-fact .eyebrow { margin-bottom:4px; font-size:9px; }
+.solar-planet-fact h2 { margin:0 0 5px; color:var(--portal-ink); font-size:20px; }
+.solar-planet-fact p { margin:0; color:var(--muted); font-size:12px; line-height:1.65; }
+.solar-fact-copy { flex:1; min-width:0; }
+.solar-planet-stats { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.solar-planet-stats > span { display:grid; gap:4px; min-width:125px; padding:9px 11px; border:1px solid var(--border); border-radius:10px; background:var(--bg); }
+.solar-planet-stats small { color:var(--muted); font-size:8px; font-weight:800; letter-spacing:.6px; }
+.solar-planet-stats strong { color:var(--portal-ink); font-size:11px; }
+.solar-planet-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.solar-planet-card { padding:22px; border:1px solid var(--border); border-radius:17px; background:var(--card); box-shadow:var(--portal-shadow); }
+.solar-card-top { display:flex; align-items:center; justify-content:space-between; }
+.solar-card-planet { flex-basis:38px; width:38px; }
+.solar-planet-card .eyebrow { margin:0; }
+.solar-planet-card h2 { margin:16px 0 3px; color:var(--portal-ink); font-size:21px; }
+.solar-planet-type { color:var(--brand); font-size:10px; font-weight:750; }
+.solar-planet-card p { margin:11px 0 0; color:var(--muted); font-size:12px; line-height:1.7; }
+.solar-mission-card { max-width:760px; margin:0 auto; padding:30px; border:1px solid var(--border); border-radius:18px; background:var(--card); box-shadow:var(--portal-shadow); }
+.solar-mission-card h2 { margin:7px 0 20px; color:var(--portal-ink); font-size:22px; }
+.solar-answer-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.solar-answer-grid button { border:1px solid var(--border); background:var(--bg); color:var(--text); }
+.solar-answer-grid button.correct { border-color:#48af8c; background:#e8f8f2; color:#237e61; }
+.solar-answer-grid button.incorrect { border-color:#d97b83; background:#fff0f1; color:#ac3644; }
+.solar-feedback { margin:14px 0 0; color:#bd4352; font-size:12px; }
+.solar-feedback.correct { color:#238766; }
+.solar-completion { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:24px; padding:14px; border-radius:12px; background:var(--portal-lilac); color:var(--brand); font-size:12px; }
+.solar-page-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.solar-page-actions > span { color:var(--muted); font-size:11px; }
+.solar-page-actions button { padding:10px 14px; font-size:11px; }
+.india-explorer { display:grid; gap:14px; }
+.india-map-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
+.india-map-heading h2,.india-neighbors h3 { margin:0 0 5px; color:var(--portal-ink); font-size:22px; }
+.india-map-heading p,.india-neighbors > div:first-child p { max-width:620px; margin:0; color:var(--muted); font-size:12px; line-height:1.6; }
+.india-search { display:grid; flex:0 1 300px; gap:4px; margin:0; }
+.india-search .eyebrow { margin:0; font-size:8px; }
+.india-search input { padding:9px 11px; font-size:12px; }
+.india-tools { display:grid; flex:0 1 340px; gap:8px; }
+.india-view-toggle,.india-map-filters { display:flex; flex-wrap:wrap; gap:5px; }
+.india-view-toggle button,.india-map-filters button { padding:7px 10px; border:1px solid var(--border); background:var(--card); color:var(--muted); box-shadow:none; font-size:10px; }
+.india-view-toggle button.active,.india-map-filters button.active { border-color:var(--brand); background:var(--portal-lilac); color:var(--brand); }
+.india-map-card { display:grid; grid-template-columns:1fr; gap:12px; overflow:hidden; padding:16px; border:1px solid var(--border); border-radius:18px; background:var(--card); box-shadow:var(--portal-shadow); }
+.india-map-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.india-fullscreen-button { white-space:nowrap; font-size:10px; }
+.india-map-card:fullscreen { width:100vw; height:100vh; max-width:none; align-content:center; overflow:auto; padding:24px; border:0; border-radius:0; background:#0b0d17; }
+.india-map-card:fullscreen .india-map-world { min-height:min(72vh,720px); }
+.india-map-card:fullscreen .india-map-art { min-height:min(72vh,720px); }
+.india-map-card:fullscreen .india-map-toolbar { position:sticky; top:0; }
+.india-map-world { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr); min-height:500px; overflow:hidden; border:1px solid #292c3c; border-radius:16px; background:#080a14; }
+.india-map-art { position:relative; min-width:0; min-height:500px; overflow:hidden; background:radial-gradient(ellipse at 48% 47%,rgba(46,57,85,.42),transparent 58%); }
+.india-map-silhouette { position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 10px 24px rgba(0,0,0,.32)); }
+.india-map-region { fill:#f5f5f2; stroke:#747c90; stroke-width:1.4; stroke-linejoin:round; vector-effect:non-scaling-stroke; cursor:pointer; transition:fill .16s ease,stroke .16s ease; }
+.india-map-region.union-territory { fill:#f6e2bd; }
+.india-map-region:hover,.india-map-region.hovered,.india-map-region.active,.india-map-region:focus { fill:#ff873b; stroke:#fff; stroke-width:2.4; outline:none; }
+.india-map-status { position:absolute; inset:45% 8% auto; margin:0; color:#e4e6ee; text-align:center; font-size:13px; }
+.india-map-status.error { color:#ffb5a7; }
+.india-map-empty { fill:#e4e6ee; text-anchor:middle; font-size:22px; }
+.india-no-results { position:absolute; inset:45% 10% auto; color:#f5f6fb; text-align:center; font-size:12px; }
+.india-map-info { display:flex; flex-direction:column; justify-content:center; padding:24px; border-left:1px solid #242737; color:#f5f6fb; }
+.india-map-info .eyebrow,.india-map-neighbors span { color:#ff9a54; font-size:9px; font-weight:800; letter-spacing:1.4px; }
+.india-map-info h3 { margin:12px 0 5px; color:#fff; font-size:27px; }
+.india-map-info > p { margin:0; color:#9da3b7; font-size:12px; }
+.india-map-capital { display:grid; gap:6px; margin:22px 0 14px; padding:14px; border:1px solid #292d3e; border-radius:12px; background:#111421; }
+.india-map-capital span { color:#9299af; font-size:8px; font-weight:800; letter-spacing:1px; }
+.india-map-capital strong { color:#fff; font-size:16px; }
+.india-map-info > small { color:#9299af; font-size:10px; line-height:1.6; }
+.india-map-neighbors { display:grid; gap:7px; margin-top:26px; padding-top:16px; border-top:1px solid #292d3e; }
+.india-map-neighbors strong { color:#c8ccda; font-size:10px; line-height:1.6; }
+.india-map-legend { display:flex; justify-content:center; gap:16px; color:var(--muted); font-size:10px; }
+.india-map-legend span { display:flex; align-items:center; gap:6px; }
+.india-map-legend i { width:9px; height:9px; border-radius:50%; background:#ff8a3d; }
+.india-map-legend span:nth-child(2) i { background:#f2bd62; }
+.india-map-legend small { flex-basis:100%; color:var(--muted); text-align:center; font-size:8px; }
+.india-region-detail { display:flex; align-items:center; gap:14px; padding:16px 19px; border:1px solid var(--border); border-radius:15px; background:var(--card); box-shadow:var(--portal-shadow); }
+.india-region-mark { display:grid; flex:0 0 43px; width:43px; height:43px; place-items:center; border-radius:14px; background:#e2f2e8; color:#24784c; font-size:12px; font-weight:900; }
+.india-region-mark.union-territory { background:#fff0d6; color:#a16c17; }
+.india-region-detail .eyebrow { margin:0 0 3px; font-size:8px; }
+.india-region-detail h3 { margin:0 0 3px; color:var(--portal-ink); font-size:16px; }
+.india-region-detail p { margin:0; color:var(--muted); font-size:12px; }
+.india-region-detail p strong { color:var(--text); }
+.india-region-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.india-region-list button { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; padding:9px 11px; border:1px solid var(--border); background:var(--card); color:var(--text); text-align:left; box-shadow:none; }
+.india-region-list button:hover { transform:none; border-color:var(--brand); box-shadow:none; }
+.india-region-list button.active { border-color:var(--brand); background:var(--portal-lilac); }
+.india-region-list button > span { display:grid; gap:3px; min-width:0; }
+.india-region-list strong,.india-region-list b { overflow:hidden; color:var(--portal-ink); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.india-region-list small { color:var(--muted); font-size:8px; }
+.india-neighbors { display:grid; gap:12px; padding:18px; border:1px solid var(--border); border-radius:17px; background:var(--card); box-shadow:var(--portal-shadow); }
+.india-neighbors h3 { font-size:18px; }
+.india-neighbors > div:first-child p { font-size:11px; }
+.india-neighbor-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.india-neighbor-grid article { display:grid; grid-template-columns:20px 1fr; align-items:center; gap:3px 7px; padding:10px; border:1px solid var(--border); border-radius:11px; background:var(--bg); }
+.india-neighbor-grid article > span { grid-row:span 2; display:grid; width:20px; height:20px; place-items:center; border-radius:7px; background:var(--portal-lilac); color:var(--brand); font-size:10px; }
+.india-neighbor-grid strong { color:var(--portal-ink); font-size:11px; }
+.india-neighbor-grid small { color:var(--muted); font-size:8px; line-height:1.35; }
+.india-border-note { margin:0; color:var(--muted); font-size:9px; line-height:1.5; }
+.india-capital-game { position:relative; max-width:920px; width:100%; margin:0 auto; padding:26px; border:1px solid var(--border); border-radius:18px; background:var(--card); box-shadow:var(--portal-shadow); }
+.india-game-heading h3 { margin:7px 0 5px; color:var(--portal-ink); font-size:22px; }
+.india-game-heading p { margin:0; color:var(--muted); font-size:12px; }
+.india-game-score { position:absolute; top:24px; right:26px; display:grid; justify-items:end; gap:3px; color:var(--brand); }
+.india-game-score strong { font-size:22px; }
+.india-game-score strong small { font-size:13px; }
+.india-game-score > span { color:var(--muted); font-size:8px; font-weight:800; letter-spacing:1px; }
+.india-match-board { display:grid; grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr); align-items:stretch; gap:12px; margin-top:22px; }
+.india-match-column { display:grid; align-content:start; gap:7px; }
+.india-match-column h4 { margin:0 0 3px; color:var(--muted); font-size:9px; letter-spacing:1px; }
+.india-match-option { display:flex; align-items:center; gap:9px; min-height:40px; padding:8px 10px; border:1px solid var(--border); background:var(--bg); color:var(--text); text-align:left; box-shadow:none; font-size:11px; }
+.india-match-option:hover:not(:disabled) { transform:translateY(-1px); border-color:var(--brand); box-shadow:none; }
+.india-match-option > span { display:grid; flex:0 0 22px; width:22px; height:22px; place-items:center; border-radius:7px; background:var(--portal-lilac); color:var(--brand); font-size:8px; font-weight:800; }
+.india-match-column:last-child .india-match-option { justify-content:space-between; }
+.india-match-option.selected { border-color:var(--brand); background:var(--portal-lilac); color:var(--brand); }
+.india-match-option.wrong { border-color:#d97b83; background:#fff0f1; color:#ac3644; }
+.india-match-option.matched,.india-match-option:disabled { border-color:#48af8c; background:#e8f8f2; color:#237e61; opacity:1; }
+.india-match-option b { margin-left:auto; }
+.india-match-connector { display:grid; place-items:center; color:var(--brand); font-size:22px; }
+.india-game-message { min-height:20px; margin:16px 0 0; color:var(--muted); font-size:12px; }
+.india-game-message.correct { color:#238766; font-weight:700; }
+.india-capital-game > button { margin-top:8px; }
+
 /* Game-inspired assessment details */
 .challenge-stage { display:inline-flex; align-items:center; gap:6px; color:#9b762b; font-size:10px; font-weight:900; letter-spacing:1.2px; }
 .challenge-stage > span { display:grid; width:23px; height:23px; place-items:center; border-radius:8px; background:#fff2cf; color:#c28a1c; font-size:12px; }
@@ -379,6 +570,26 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .quiz-question-card { min-height:300px; padding:18px; }
   .quiz-question-heading { align-items:flex-start; }
   .quiz-question-heading .eyebrow { font-size:8px; }
+  .solar-learning-hero { min-height:150px; padding:24px; }
+  .solar-hero-orb { flex-basis:58px; width:58px; }
+  .solar-scene { min-height:280px; aspect-ratio:1.15; }
+  .solar-planet-grid { grid-template-columns:1fr; }
+  .solar-assignment-actions { align-items:flex-start; flex-direction:column; }
+  .solar-controls { flex-wrap:wrap; justify-content:flex-start; gap:12px 18px; }
+  .solar-mode-options { gap:9px; }
+  .solar-mode-options legend { display:none; }
+  .india-map-heading { align-items:stretch; flex-direction:column; gap:12px; }
+  .india-search { flex-basis:auto; }
+  .india-region-list { grid-template-columns:1fr; }
+  .india-neighbor-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .india-map-card { padding:10px; }
+  .india-map-world { grid-template-columns:minmax(0,1fr); }
+  .india-map-art { min-height:420px; }
+  .india-map-info { padding:18px; border-top:1px solid #242737; border-left:0; }
+  .india-map-info h3 { font-size:22px; }
+  .india-capital-game { padding:20px 14px; }
+  .india-game-heading { padding-right:66px; }
+  .india-game-heading h3 { font-size:18px; }
 }
 @media (max-width:430px) {
   .student-welcome { padding:22px 18px; }
@@ -394,6 +605,37 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .quiz-question-heading { flex-wrap:wrap; }
   .quiz-navigation-actions > button { min-width:0; flex:1; padding:10px 8px; font-size:12px; }
   .quiz-results-screen { padding:18px 12px 32px; }
+  .solar-learning-hero { padding:20px; }
+  .solar-hero-orb { display:none; }
+  .solar-scene { min-height:260px; aspect-ratio:1; }
+  .solar-explorer-card { padding:8px; }
+  .solar-controls { justify-content:space-between; gap:10px; }
+  .solar-controls label { gap:5px; font-size:10px; }
+  .solar-controls input[type="range"] { width:75px; }
+  .solar-mode-options { width:100%; justify-content:space-between; }
+  .solar-speed-control { width:100%; }
+  .solar-speed-control input[type="range"] { width:100%; }
+  .solar-zoom-controls { top:8px; right:8px; gap:4px; padding:4px; }
+  .solar-zoom-controls button { width:28px; height:28px; }
+  .solar-planet-selector button { padding:8px; }
+  .solar-planet-stats > span { flex:1 1 115px; }
+  .solar-planet-fact { align-items:flex-start; gap:12px; padding:16px; }
+  .solar-fact-planet { flex-basis:36px; width:36px; }
+  .solar-mission-card { padding:20px; }
+  .solar-page-actions button { padding:9px 10px; font-size:10px; }
+  .india-map-card { grid-template-columns:1fr; padding:10px; }
+  .india-map-art { min-height:360px; }
+  .india-game-score { top:17px; right:14px; }
+  .india-match-board { grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr); gap:5px; }
+  .india-match-option { min-height:38px; gap:5px; padding:7px 5px; font-size:9px; }
+  .india-match-option > span { flex-basis:18px; width:18px; height:18px; font-size:7px; }
+  .india-match-column h4 { font-size:8px; }
+  .india-match-connector { font-size:16px; }
+  .india-neighbor-grid { grid-template-columns:1fr; }
+  .india-tools { width:100%; }
+  .india-map-toolbar { align-items:flex-start; flex-direction:column; }
+  .india-quiz-options { grid-template-columns:1fr; }
+  .india-capital-quiz { padding:18px; }
 }
 @media (prefers-reduced-motion:reduce) {
   .result-confetti i { animation:none; display:none; }

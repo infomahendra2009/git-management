@@ -84,6 +84,7 @@ Not in the app: per-question time limits during a quiz, immediate right/wrong fe
 - **Account lockout:** 5 wrong passwords lock an account for 15 minutes (both settable); admins can unlock it from the Users tab
 - **Audit log (admin):** searchable log of logins and failed logins, lockouts, password changes, user changes, quiz publish/unpublish/delete, result release, CSV imports and essay marking
 - **Production safety:** the API refuses to start in production with a weak `JWT_SECRET`; strict CORS by default; general API rate limit; health check with a database ping; graceful shutdown; old OTP codes are cleaned up
+- **Interactive learning module:** admins can assign it to student accounts or classes. Students get a zoomable solar-system explorer and an India geography page with interactive state and union-territory boundaries, hover/click details, and a left-to-right capital matching game covering all 28 states and 8 union territories. Map boundaries load from geoBoundaries (CC BY 2.5 IN) and require an internet connection. Class assignments also cover future members.
 - **Database migrations:** see below
 - **Automatic backups:** a `backup` container writes a database dump and an uploads archive to `./backups` every 24 hours and deletes ones older than 14 days (`BACKUP_INTERVAL_HOURS`, `BACKUP_KEEP_DAYS`)
 

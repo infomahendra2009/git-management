@@ -14,6 +14,7 @@ import studentRoutes from './routes/student.js';
 import reportRoutes from './routes/reports.js';
 import gradingRoutes from './routes/grading.js';
 import auditRoutes from './routes/audit.js';
+import learningModuleRoutes from './routes/learningModule.js';
 
 export function createApp() {
   const app = express();
@@ -45,6 +46,7 @@ export function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/grading', gradingRoutes);
   app.use('/api/audit', auditRoutes);
+  app.use('/api/learning-module', learningModuleRoutes);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
   app.use((err, _req, res, _next) => {
