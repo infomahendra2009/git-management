@@ -216,6 +216,11 @@ export default function TakeQuiz({ attemptId, onExit }) {
           {!single && <div className="quiz-navigation-actions"><button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Finish assessment</button></div>}
         </main>
         <aside className="quiz-session-aside">
+          <section className="quiz-submit-card">
+            <span className="submit-card-icon">✦</span><strong>Mission checkpoint</strong>
+            <p>{questions.length - answered > 0 ? `${questions.length - answered} question${questions.length - answered === 1 ? '' : 's'} still unanswered.` : 'You have answered every question.'} You can review your answers before submitting.</p>
+            <button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Submit assessment</button>
+          </section>
           <section className="quiz-aside-card">
             <span className="eyebrow">{single ? 'QUESTION NAVIGATOR' : 'ASSESSMENT GUIDE'}</span>
             {single
@@ -232,11 +237,7 @@ export default function TakeQuiz({ attemptId, onExit }) {
               </>
               : <div className="guide-copy"><strong>Take it one question at a time.</strong><p>Your answers save automatically. Review your responses before you submit the assessment.</p></div>}
           </section>
-          <section className="quiz-submit-card">
-            <span className="submit-card-icon">✦</span><strong>Mission checkpoint</strong>
-            <p>{questions.length - answered > 0 ? `${questions.length - answered} question${questions.length - answered === 1 ? '' : 's'} still unanswered.` : 'You have answered every question.'} You can review your answers before submitting.</p>
-            <button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Submit assessment</button>
-          </section>
+          
         </aside>
       </div>
     </div>
