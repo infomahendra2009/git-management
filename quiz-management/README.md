@@ -12,6 +12,11 @@ docker compose up -d --build
 Open http://localhost:8080 and log in with the seed admin from `.env`
 (default `admin@example.com` / `ChangeMe@123`; you must change it on first login).
 
+### Install as an app (PWA)
+Open the site in a supported browser and choose **Install app** when the install button appears, or use the browser's install option. On phones, use the browser's **Add to Home Screen** option if no install button appears. Installation requires HTTPS, except for `localhost`.
+
+The app shell and static assets are available offline after the first visit. Sign-in, quizzes, and other data require a network connection; private API responses are never cached by the service worker.
+
 Toggle OTP: set `OTP_ENABLED=true|false` in `.env`, then `docker compose up -d api`. No frontend rebuild.
 With `OTP_PROVIDER=console`, codes are printed in `docker compose logs api`.
 

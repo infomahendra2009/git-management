@@ -22,27 +22,59 @@ export default function StudentQuizzes({ onTake }) {
   };
 
   if (result) return <ResultView result={result} onBack={() => { setResult(null); load(); }} />;
-  if (!quizzes) return <div className="card muted">{err || 'Loading…'}</div>;
+  if (!quizzes) return <div className="card portal-loading">{err || 'Loading your quizzes…'}</div>;
+
+  const activeCount = quizzes.filter((q) => q.inProgressAttemptId || q.canStart).length;
+  const inProgressCount = quizzes.filter((q) => q.inProgressAttemptId).length;
+  const completedCount = quizzes.reduce((count, q) => count + q.submitted.length, 0);
 
   return (
-    <>
+    <section className="student-quizzes-page">
+      <div className="student-page-heading">
+        <div><span className="eyebrow">YOUR ASSESSMENTS</span><h1>My quizzes</h1><p>Take your time, do your best, and keep moving forward.</p></div>
+        <span className="heading-spark" aria-hidden="true">✦</span>
+      </div>
+      <div className="student-stats">
+        <div className="student-stat"><span className="student-stat-icon">Q</span><span><strong>{quizzes.length}</strong><small>Assigned to you</small></span></div>
+        <div className="student-stat"><span className="student-stat-icon accent-blue">↗</span><span><strong>{activeCount}</strong><small>Ready to take</small></span></div>
+        <div className="student-stat"><span className="student-stat-icon accent-amber">◷</span><span><strong>{inProgressCount}</strong><small>In progress</small></span></div>
+        <div className="student-stat"><span className="student-stat-icon accent-green">✓</span><span><strong>{completedCount}</strong><small>Submitted attempts</small></span></div>
+      </div>
       {err && <div className="card err">{err}</div>}
-      {quizzes.length === 0 && <div className="card muted">No quizzes have been assigned to you yet.</div>}
+      {quizzes.length === 0 && <div className="card empty-quizzes"><span className="empty-quiz-icon">✦</span><h2>You’re all caught up</h2><p>No quizzes have been assigned to you yet. Check back later.</p></div>}
       {quizzes.map((q) => (
-        <div className="card" key={q.id}>
-          <h3>{q.title}</h3>
-          {q.description && <p style={{ whiteSpace: 'pre-wrap' }}>{q.description}</p>}
-          <p className="muted">
-            {q.questions} questions · {q.timeLimitMinutes ? `${q.timeLimitMinutes} min` : 'no time limit'} · attempts {q.attemptsUsed}/{q.attemptsAllowed}
-            {q.startsAt && ` · opens ${when(q.startsAt)}`}{q.endsAt && ` · closes ${when(q.endsAt)}`}
-          </p>
-          {q.window === 'UPCOMING' && <p className="muted">Not open yet.</p>}
-          {q.window === 'CLOSED' && !q.inProgressAttemptId && <p className="muted">Closed.</p>}
-          {q.inProgressAttemptId
-            ? <button onClick={() => onTake(q.inProgressAttemptId)}>Resume quiz</button>
-            : q.canStart && <button onClick={() => start(q)}>{q.attemptsUsed ? 'Start another attempt' : 'Start quiz'}</button>}
+        <article className={`card quiz-card ${q.inProgressAttemptId ? 'quiz-card-progress' : ''}`} key={q.id}>
+          <div className="quiz-card-top">
+            <span className={`quiz-status ${q.inProgressAttemptId ? 'status-progress' : q.window === 'UPCOMING' ? 'status-upcoming' : q.window === 'CLOSED' && !q.inProgressAttemptId ? 'status-closed' : q.canStart ? 'status-ready' : 'status-done'}`}>
+              {q.inProgressAttemptId ? 'IN PROGRESS' : q.window === 'UPCOMING' ? 'COMING UP' : q.window === 'CLOSED' ? 'CLOSED' : q.canStart ? 'READY TO START' : 'COMPLETED'}
+            </span>
+            <span className="quiz-attempt-count">Attempt {q.attemptsUsed}/{q.attemptsAllowed}</span>
+          </div>
+          <div className="quiz-card-content">
+            <div className="quiz-card-symbol" aria-hidden="true">✦</div>
+            <div className="quiz-card-copy">
+              <h2>{q.title}</h2>
+              {q.description && <p className="quiz-description">{q.description}</p>}
+              <div className="quiz-meta">
+                <span><b>{q.questions}</b> questions</span><i>·</i>
+                <span><b>{q.timeLimitMinutes ? `${q.timeLimitMinutes} min` : 'Untimed'}</b></span>
+                {q.startsAt && <><i>·</i><span>Opens {when(q.startsAt)}</span></>}
+                {q.endsAt && <><i>·</i><span>Closes {when(q.endsAt)}</span></>}
+              </div>
+            </div>
+            <div className="quiz-card-action">
+              {q.inProgressAttemptId
+                ? <button className="quiz-cta resume-cta" onClick={() => onTake(q.inProgressAttemptId)}>Resume quiz <span aria-hidden="true">→</span></button>
+                : q.canStart && <button className="quiz-cta" onClick={() => start(q)}>{q.attemptsUsed ? 'Try again' : 'Start quiz'} <span aria-hidden="true">→</span></button>}
+              {q.window === 'UPCOMING' && <span className="muted">Not open yet</span>}
+              {q.window === 'CLOSED' && !q.inProgressAttemptId && <span className="muted">This quiz is closed</span>}
+              {!q.canStart && q.window === 'OPEN' && !q.inProgressAttemptId && <span className="muted">No attempts remaining</span>}
+            </div>
+          </div>
           {q.submitted.length > 0 && (
-            <div className="table-wrap" style={{ marginTop: 12 }}>
+            <details className="attempt-history">
+              <summary>Attempt history <span>{q.submitted.length}</span></summary>
+              <div className="table-wrap">
               <table>
                 <thead><tr><th>Attempt</th><th>Submitted</th><th>Result</th><th></th></tr></thead>
                 <tbody>
@@ -55,10 +87,11 @@ export default function StudentQuizzes({ onTake }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </details>
           )}
-        </div>
+        </article>
       ))}
-    </>
+    </section>
   );
 }

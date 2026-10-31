@@ -1,0 +1,28 @@
+{
+  "id": "/",
+  "name": "QuizPortal — Learning & Assessments",
+  "short_name": "QuizPortal",
+  "description": "Take assessments and track your learning with QuizPortal.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f6fb",
+  "theme_color": "#635bdb",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/quiz-portal-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/quiz-portal-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -26,26 +26,47 @@ export default function Dashboard({ user, onLogout }) {
     : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results']];
 
   return (
-    <>
-      <div className="nav">
-        <strong>Quiz Platform</strong>
-        <div className="row" style={{ flex: '0 0 auto' }}>
-          <span className="muted">{user.name} <span className="badge">{ROLE_LABEL[user.role]}</span></span>
-          <button className="secondary" onClick={onLogout}>Logout</button>
+    <div className={isStaff ? 'app-shell staff-shell' : 'app-shell student-shell'}>
+      <header className="nav portal-nav">
+        <div className="portal-brand">
+          <span className="portal-brand-mark">Q</span>
+          <span>Quiz<span className="portal-brand-light">Portal</span></span>
         </div>
-      </div>
-      <div className="container">
-        <div className="tabs" style={{ flexWrap: 'wrap' }}>
-          {tabs.map(([k, label]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{label}</button>)}
+        <div className="portal-user">
+          <span className="portal-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</span>
+          <span className="portal-user-copy"><strong>{user.name}</strong><span>{ROLE_LABEL[user.role]} · {user.userCode}</span></span>
+          <button className="secondary portal-logout" onClick={onLogout}>Logout</button>
         </div>
+      </header>
+      <div className="container portal-main">
+        <nav className={isStaff ? 'tabs portal-tabs staff-tabs' : 'tabs portal-tabs'} aria-label="Main navigation">
+          {tabs.map(([k, label]) => (
+            <button key={k} className={tab === k ? 'active' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => setTab(k)}>
+              {label}
+            </button>
+          ))}
+        </nav>
 
         {tab === 'home' && (
-          <div className="card">
-            <h2>Welcome, {user.name}</h2>
-            <p className="muted">User ID: {user.userCode}</p>
-            {user.role === 'STUDENT' && <p>Open <strong>My quizzes</strong> to start or resume a quiz, and <strong>My results</strong> to see your score trend and strengths once results are released.</p>}
-            {isStaff && <p>Build questions, group students into classes, create and publish quizzes, then release results. Use <strong>Reports</strong> for student-wise, quiz-wise and class-wise analysis with CSV, Excel and PDF export.</p>}
-          </div>
+          isStaff
+            ? <div className="card staff-welcome">
+              <span className="eyebrow">YOUR WORKSPACE</span>
+              <h1>Welcome back, {user.name}</h1>
+              <p className="muted">Build great assessments, support your students, and follow their progress from one place.</p>
+              <div className="welcome-actions">
+                <button onClick={() => setTab('quizzes')}>Manage quizzes</button>
+                <button className="secondary" onClick={() => setTab('questions')}>Question bank</button>
+              </div>
+            </div>
+            : <div className="card student-welcome">
+              <div>
+                <span className="eyebrow">YOUR LEARNING SPACE</span>
+                <h1>Ready for a new challenge, {user.name.split(' ')[0]}?</h1>
+                <p>Pick up where you left off or explore your assigned quizzes.</p>
+                <button onClick={() => setTab('myquizzes')}>Explore my quizzes <span aria-hidden="true">→</span></button>
+              </div>
+              <div className="welcome-art" aria-hidden="true"><span>Q</span><i>✦</i><b>?</b></div>
+            </div>
         )}
         {tab === 'quizzes' && isStaff && <Quizzes user={user} />}
         {tab === 'grading' && isStaff && <Grading />}
@@ -57,6 +78,7 @@ export default function Dashboard({ user, onLogout }) {
         {tab === 'results' && !isStaff && <StudentResults />}
         {tab === 'myquizzes' && !isStaff && <StudentQuizzes key={refresh} onTake={setTaking} />}
       </div>
-    </>
+      <footer className="portal-footer">QuizPortal <span>·</span> Learn at your own pace</footer>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import { api, getToken, setToken } from './api.js';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
+import PwaInstallButton from './pages/PwaInstallButton.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -22,10 +23,12 @@ export default function App() {
   const onLogin = ({ token, user }) => { setToken(token); setUser(user); };
   const logout = () => { setToken(null); setUser(null); };
 
-  if (!ready) return <div className="center muted">Loading…</div>;
-  if (!user) return <Login config={config} onLogin={onLogin} />;
-  if (user.mustChangePassword) {
-    return <ChangePassword onDone={() => setUser({ ...user, mustChangePassword: false })} onLogout={logout} />;
-  }
-  return <Dashboard user={user} onLogout={logout} />;
+  let content;
+  if (!ready) content = <div className="center muted">Loading…</div>;
+  else if (!user) content = <Login config={config} onLogin={onLogin} />;
+  else if (user.mustChangePassword) {
+    content = <ChangePassword onDone={() => setUser({ ...user, mustChangePassword: false })} onLogout={logout} />;
+  } else content = <Dashboard user={user} onLogout={logout} />;
+
+  return <>{content}<PwaInstallButton /></>;
 }

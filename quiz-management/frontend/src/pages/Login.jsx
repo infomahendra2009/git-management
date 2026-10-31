@@ -34,9 +34,14 @@ export default function Login({ config, onLogin }) {
   };
 
   return (
-    <div className="center">
-      <div className="card">
-        <h2>Sign in</h2>
+    <div className="center login-page">
+      <div className="login-brand">
+        <span className="portal-brand-mark">Q</span>
+        <span>Quiz<span className="portal-brand-light">Portal</span></span>
+      </div>
+      <div className="card login-card">
+        <span className="eyebrow">WELCOME BACK</span>
+        <h1>Sign in to your portal</h1>
         <p className="muted">Use your email, phone number or user ID.</p>
 
         {mode === 'password' && (

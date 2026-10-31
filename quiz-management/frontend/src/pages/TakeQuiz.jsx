@@ -8,19 +8,20 @@ const fmt = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Ma
 function QuestionView({ q, value, onChange }) {
   return (
     <div>
-      <p style={{ whiteSpace: 'pre-wrap', fontSize: 17 }}>{q.text}</p>
+      <p className="challenge-question-text" style={{ whiteSpace: 'pre-wrap', fontSize: 17 }}>{q.text}</p>
       {q.imageUrl && <img className="thumb" style={{ maxHeight: 300 }} src={q.imageUrl} alt={q.imageAlt || ''} />}
       <div style={{ marginTop: 12 }}>
-        {q.type === 'MULTIPLE_CHOICE' && q.options.map((o) => (
+        {q.type === 'MULTIPLE_CHOICE' && q.options.map((o, index) => (
           <label key={o.key} className={`choice ${value?.choice === o.key ? 'sel' : ''}`}>
             <input type="radio" name={q.id} checked={value?.choice === o.key} onChange={() => onChange({ choice: o.key })} />
-            <span>{o.text}{o.imageUrl && <img className="thumb" src={o.imageUrl} alt="" />}</span>
+            <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
+            <span className="choice-copy">{o.text}{o.imageUrl && <img className="thumb" src={o.imageUrl} alt="" />}</span>
           </label>
         ))}
         {q.type === 'MULTIPLE_SELECT' && (
           <>
             <p className="muted">Select all that apply.</p>
-            {q.options.map((o) => {
+            {q.options.map((o, index) => {
               const cur = value?.choices || [];
               const on = cur.includes(o.key);
               return (
@@ -29,16 +30,18 @@ function QuestionView({ q, value, onChange }) {
                     const next = on ? cur.filter((k) => k !== o.key) : [...cur, o.key];
                     onChange(next.length ? { choices: next } : null);
                   }} />
-                  <span>{o.text}{o.imageUrl && <img className="thumb" src={o.imageUrl} alt="" />}</span>
+                  <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
+                  <span className="choice-copy">{o.text}{o.imageUrl && <img className="thumb" src={o.imageUrl} alt="" />}</span>
                 </label>
               );
             })}
           </>
         )}
-        {q.type === 'TRUE_FALSE' && [true, false].map((b) => (
+        {q.type === 'TRUE_FALSE' && [true, false].map((b, index) => (
           <label key={String(b)} className={`choice ${value?.value === b ? 'sel' : ''}`}>
             <input type="radio" name={q.id} checked={value?.value === b} onChange={() => onChange({ value: b })} />
-            <span>{b ? 'True' : 'False'}</span>
+            <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
+            <span className="choice-copy">{b ? 'True' : 'False'}</span>
           </label>
         ))}
         {q.type === 'ESSAY' && (
@@ -161,48 +164,80 @@ export default function TakeQuiz({ attemptId, onExit }) {
 
   const { quiz, questions } = data;
   const answered = questions.filter((q) => isAnswered(answers[q.id])).length;
+  const progressPercent = questions.length ? Math.round((answered / questions.length) * 100) : 0;
   const single = quiz.oneAtATime;
   const q = questions[idx];
+  const questMessage = progressPercent === 100
+    ? 'All challenges complete!'
+    : progressPercent >= 75
+      ? 'Final stretch — you’ve got this!'
+      : progressPercent >= 35
+        ? 'Great momentum. Keep going!'
+        : 'Your challenge is underway.';
 
   return (
-    <div className="container">
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <h3 style={{ margin: 0 }}>{quiz.title}</h3>
-          {remaining !== null && <span className={`timer ${remaining < 60 ? 'low' : ''}`}>⏱ {fmt(remaining)}</span>}
+    <div className="quiz-session">
+      <header className="quiz-session-header">
+        <div className="quiz-session-brand"><span className="portal-brand-mark">Q</span><span>Quiz<span className="portal-brand-light">Portal</span></span></div>
+        <div className="quiz-session-title"><span>ASSESSMENT IN PROGRESS</span><strong>{quiz.title}</strong></div>
+        <div className={`quiz-countdown ${remaining !== null && remaining < 60 ? 'low' : ''}`}>
+          <span aria-hidden="true">◷</span><small>TIME LEFT</small><strong>{remaining !== null ? fmt(remaining) : '--:--:--'}</strong>
         </div>
-        {quiz.showProgress && (
-          <>
-            <div className="bar" style={{ marginTop: 10 }}><div style={{ width: `${(answered / questions.length) * 100}%` }} /></div>
-            <div className="muted">{answered} of {questions.length} answered {saveState && `· ${saveState}`}</div>
-          </>
-        )}
-        {single && (
-          <div className="palette">
-            {questions.map((x, n) => (
-              <button key={x.id} type="button" disabled={!quiz.allowReview && n !== idx}
-                className={`pbtn ${isAnswered(answers[x.id]) ? 'done' : ''} ${flags[x.id] ? 'flag' : ''} ${n === idx ? 'cur' : ''}`}
-                onClick={() => goTo(n)} aria-label={`Question ${n + 1}`}>{n + 1}</button>
-            ))}
+      </header>
+      <div className="quiz-session-layout">
+        <main className="quiz-workspace">
+          <div className="quiz-progress-panel">
+            <div className="quiz-progress-copy"><span>CHALLENGE PROGRESS</span><strong>{answered}<small> / {questions.length} complete</small></strong></div>
+            <div className="quiz-progress-track"><div style={{ width: `${progressPercent}%` }} /></div>
+            <span className={`save-indicator ${saveState.startsWith('Not saved') ? 'save-error' : ''}`}><i />{saveState || 'Progress auto-saves'}</span>
           </div>
-        )}
-      </div>
-
-      {(single ? [q] : questions).map((x) => (
-        <div className="card" key={x.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <strong>Question {x.position + 1} of {questions.length} <span className="muted">· {x.points} pt</span></strong>
-            <button type="button" className="secondary small" onClick={() => toggleFlag(x)}>{flags[x.id] ? '⚑ Flagged' : '⚐ Flag for review'}</button>
-          </div>
-          <QuestionView q={x} value={answers[x.id]} onChange={(v) => setAnswer(x, v)} />
-        </div>
-      ))}
-
-      {err && <div className="err">{err}</div>}
-      <div className="row">
-        {single && quiz.allowReview && <button className="secondary" disabled={idx === 0} onClick={() => goTo(idx - 1)}>← Previous</button>}
-        {single && idx < questions.length - 1 && <button onClick={() => goTo(idx + 1)}>Next →</button>}
-        <button className="danger" disabled={busy} onClick={() => doSubmit(false)}>Submit quiz</button>
+          {(single ? [q] : questions).map((x) => (
+            <article className="quiz-question-card" key={x.id}>
+              <div className="quiz-question-heading">
+                  <div>
+                    <span className="challenge-stage"><span aria-hidden="true">✦</span> STAGE {String(x.position + 1).padStart(2, '0')}</span>
+                    <span className="question-points">{x.points} {x.points === 1 ? 'point' : 'points'}</span>
+                  </div>
+                  <button type="button" className={`secondary small ${flags[x.id] ? 'flag-active' : ''}`} onClick={() => toggleFlag(x)}>{flags[x.id] ? '⚑ Saved for review' : '⚐ Flag challenge'}</button>
+                </div>
+                <p className="challenge-encouragement">{questMessage}</p>
+                <QuestionView q={x} value={answers[x.id]} onChange={(v) => setAnswer(x, v)} />
+            </article>
+          ))}
+          {err && <div className="err">{err}</div>}
+          {single && (
+            <div className="quiz-navigation-actions">
+              <button className="secondary" disabled={idx === 0 || !quiz.allowReview} onClick={() => goTo(idx - 1)}>← Previous</button>
+              {idx < questions.length - 1
+                ? <button className="quiz-cta" onClick={() => goTo(idx + 1)}>Save & continue <span aria-hidden="true">→</span></button>
+                : <button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Finish assessment</button>}
+            </div>
+          )}
+          {!single && <div className="quiz-navigation-actions"><button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Finish assessment</button></div>}
+        </main>
+        <aside className="quiz-session-aside">
+          <section className="quiz-aside-card">
+            <span className="eyebrow">{single ? 'QUESTION NAVIGATOR' : 'ASSESSMENT GUIDE'}</span>
+            {single
+              ? <>
+                <p className="aside-hint">Choose a question to jump to it.</p>
+                <div className="quiz-question-palette">
+                  {questions.map((x, n) => (
+                    <button key={x.id} type="button" disabled={!quiz.allowReview && n !== idx}
+                      className={`quiz-palette-item ${isAnswered(answers[x.id]) ? 'answered' : ''} ${flags[x.id] ? 'flagged' : ''} ${n === idx ? 'current' : ''}`}
+                      onClick={() => goTo(n)} aria-label={`Question ${n + 1}${isAnswered(answers[x.id]) ? ', answered' : ', unanswered'}${flags[x.id] ? ', flagged' : ''}`}>{n + 1}</button>
+                  ))}
+                </div>
+                <div className="quiz-palette-legend"><span><i className="legend-answered" />Complete</span><span><i className="legend-current" />You are here</span><span><i className="legend-flagged" />Flagged</span></div>
+              </>
+              : <div className="guide-copy"><strong>Take it one question at a time.</strong><p>Your answers save automatically. Review your responses before you submit the assessment.</p></div>}
+          </section>
+          <section className="quiz-submit-card">
+            <span className="submit-card-icon">✦</span><strong>Mission checkpoint</strong>
+            <p>{questions.length - answered > 0 ? `${questions.length - answered} question${questions.length - answered === 1 ? '' : 's'} still unanswered.` : 'You have answered every question.'} You can review your answers before submitting.</p>
+            <button className="quiz-submit" disabled={busy} onClick={() => doSubmit(false)}>Submit assessment</button>
+          </section>
+        </aside>
       </div>
     </div>
   );
