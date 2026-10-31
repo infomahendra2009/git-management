@@ -9,12 +9,14 @@ import StudentQuizzes from './StudentQuizzes.jsx';
 import Grading from './Grading.jsx';
 import AuditLog from './AuditLog.jsx';
 import TakeQuiz from './TakeQuiz.jsx';
+import ChangePassword from './ChangePassword.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Admin', TEACHER: 'Teacher', STUDENT: 'Student' };
 
 export default function Dashboard({ user, onLogout }) {
   const [tab, setTab] = useState('home');
   const [taking, setTaking] = useState(null);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const isAdmin = user.role === 'ADMIN';
   const isStaff = isAdmin || user.role === 'TEACHER';
@@ -35,6 +37,7 @@ export default function Dashboard({ user, onLogout }) {
         <div className="portal-user">
           <span className="portal-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</span>
           <span className="portal-user-copy"><strong>{user.name}</strong><span>{ROLE_LABEL[user.role]} · {user.userCode}</span></span>
+          <button className="secondary portal-password" onClick={() => setChangingPassword(true)}>Password</button>
           <button className="secondary portal-logout" onClick={onLogout}>Logout</button>
         </div>
       </header>
@@ -47,7 +50,8 @@ export default function Dashboard({ user, onLogout }) {
           ))}
         </nav>
 
-        {tab === 'home' && (
+        {changingPassword && <ChangePassword onDone={() => setChangingPassword(false)} />}
+        {!changingPassword && tab === 'home' && (
           isStaff
             ? <div className="card staff-welcome">
               <span className="eyebrow">YOUR WORKSPACE</span>
@@ -68,15 +72,15 @@ export default function Dashboard({ user, onLogout }) {
               <div className="welcome-art" aria-hidden="true"><span>Q</span><i>✦</i><b>?</b></div>
             </div>
         )}
-        {tab === 'quizzes' && isStaff && <Quizzes user={user} />}
-        {tab === 'grading' && isStaff && <Grading />}
-        {tab === 'reports' && isStaff && <Reports user={user} />}
-        {tab === 'audit' && isAdmin && <AuditLog />}
-        {tab === 'questions' && isStaff && <Questions user={user} />}
-        {tab === 'classes' && isStaff && <Classes />}
-        {tab === 'users' && isStaff && <Users canManage={isAdmin} />}
-        {tab === 'results' && !isStaff && <StudentResults />}
-        {tab === 'myquizzes' && !isStaff && <StudentQuizzes key={refresh} onTake={setTaking} />}
+        {!changingPassword && tab === 'quizzes' && isStaff && <Quizzes user={user} />}
+        {!changingPassword && tab === 'grading' && isStaff && <Grading />}
+        {!changingPassword && tab === 'reports' && isStaff && <Reports user={user} />}
+        {!changingPassword && tab === 'audit' && isAdmin && <AuditLog />}
+        {!changingPassword && tab === 'questions' && isStaff && <Questions user={user} />}
+        {!changingPassword && tab === 'classes' && isStaff && <Classes />}
+        {!changingPassword && tab === 'users' && isStaff && <Users canManage={isAdmin} />}
+        {!changingPassword && tab === 'results' && !isStaff && <StudentResults />}
+        {!changingPassword && tab === 'myquizzes' && !isStaff && <StudentQuizzes key={refresh} onTake={setTaking} />}
       </div>
       <footer className="portal-footer">QuizPortal <span>·</span> Learn at your own pace</footer>
     </div>

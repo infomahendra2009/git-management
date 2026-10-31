@@ -31,6 +31,7 @@ model User {
   lockedUntil        DateTime?
 
   otpCodes OtpCode[]
+  passwordResetTokens PasswordResetToken[]
   questions  Question[]
   media      Media[]
   importLogs ImportLog[]
@@ -56,6 +57,21 @@ model OtpCode {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Char(36)
+  userId    String    @db.Char(36)
+  tokenHash String    @db.VarChar(100)
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
 
 model AuditLog {

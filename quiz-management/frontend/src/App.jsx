@@ -7,7 +7,7 @@ import PwaInstallButton from './pages/PwaInstallButton.jsx';
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [config, setConfig] = useState({ otpEnabled: false });
+  const [config, setConfig] = useState({ otpEnabled: false, passwordResetEnabled: false });
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function App() {
   if (!ready) content = <div className="center muted">Loading…</div>;
   else if (!user) content = <Login config={config} onLogin={onLogin} />;
   else if (user.mustChangePassword) {
-    content = <ChangePassword onDone={() => setUser({ ...user, mustChangePassword: false })} onLogout={logout} />;
+    content = <ChangePassword forced onDone={() => setUser({ ...user, mustChangePassword: false })} onLogout={logout} />;
   } else content = <Dashboard user={user} onLogout={logout} />;
 
   return <>{content}<PwaInstallButton /></>;

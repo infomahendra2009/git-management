@@ -17,6 +17,7 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || '',
   apiRatePerMinute: num(process.env.API_RATE_LIMIT_PER_MIN, 3000),
   lockout: { maxFailures: num(process.env.LOGIN_MAX_FAILURES, 5), minutes: num(process.env.LOGIN_LOCK_MINUTES, 15) },
+  passwordReset: { expiryMinutes: num(process.env.PASSWORD_RESET_EXPIRY_MINUTES, 15), maxAttempts: num(process.env.PASSWORD_RESET_MAX_ATTEMPTS, 5) },
   otp: {
     enabled: bool(process.env.OTP_ENABLED, false),
     smsProvider: process.env.OTP_SMS_PROVIDER || legacyProvider,     // console | twilio | msg91 | http
@@ -56,6 +57,7 @@ export function assertSafeConfig(c = config) {
     if (c.otp.smsProvider === 'http' && !c.sms.http.url) problems.push('OTP SMS provider is "http" but SMS_HTTP_URL is not set');
     if (c.env === 'production' && (c.otp.smsProvider === 'console' || c.otp.emailProvider === 'console')) problems.push('OTP provider "console" only prints codes in the log. Use a real provider in production');
   }
+  if (!c.smtp.host || !c.smtp.from) problems.push('Email password reset is unavailable without SMTP_HOST / SMTP_FROM');
   problems.forEach((p) => console.warn(`CONFIG WARNING: ${p}`));
   return problems;
 }

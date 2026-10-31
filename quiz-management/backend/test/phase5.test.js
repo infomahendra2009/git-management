@@ -79,6 +79,26 @@ test('SMTP email is handed to the mail transport', async () => {
   await assert.rejects(createMessenger(baseCfg({ otp: { emailProvider: 'smtp' } })).sendEmail('a@b.com', 's', 't'), /SMTP is not configured/);
 });
 
+test('account recovery email always uses configured SMTP, independent of OTP settings', async () => {
+  const sent = [];
+  const transporter = { sendMail: async (message) => sent.push(message) };
+  const cfg = baseCfg({
+    smtp: { host: 'smtp.example.com', from: 'Quiz <no-reply@example.com>' },
+    otp: { emailProvider: 'console' },
+  });
+  await createMessenger(cfg, { transporter }).sendAccountEmail('student@example.com', 'Reset your password', 'Code 123456');
+  assert.deepEqual(sent, [{
+    from: 'Quiz <no-reply@example.com>',
+    to: 'student@example.com',
+    subject: 'Reset your password',
+    text: 'Code 123456',
+  }]);
+  await assert.rejects(
+    createMessenger(baseCfg(), { transporter }).sendAccountEmail('student@example.com', 'Reset', 'Code'),
+    /Account email is not configured/,
+  );
+});
+
 test('production refuses weak secrets and warns about missing provider settings', () => {
   const ok = { env: 'production', jwtSecret: 'x'.repeat(40), otp: { enabled: false } };
   assert.deepEqual(assertSafeConfig(ok), []);

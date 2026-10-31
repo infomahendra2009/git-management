@@ -20,6 +20,8 @@ The app shell and static assets are available offline after the first visit. Sig
 Toggle OTP: set `OTP_ENABLED=true|false` in `.env`, then `docker compose up -d api`. No frontend rebuild.
 With `OTP_PROVIDER=console`, codes are printed in `docker compose logs api`.
 
+Password reset by email is enabled when `SMTP_HOST` and `SMTP_FROM` are configured in `.env`. Configure the SMTP credentials (`SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`) for your mail provider, then rebuild/restart the API. Reset codes expire after 15 minutes by default and are limited to 5 verification attempts; override with `PASSWORD_RESET_EXPIRY_MINUTES` and `PASSWORD_RESET_MAX_ATTEMPTS`.
+
 ## Run directly (no Docker)
 Requires Node 20+ and MySQL 8.
 ```bash

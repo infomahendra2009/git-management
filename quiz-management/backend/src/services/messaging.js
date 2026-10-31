@@ -45,6 +45,11 @@ export function createMessenger(cfg = config, deps = {}) {
     throw new Error(`Unknown email provider "${cfg.otp.emailProvider}"`);
   }
 
+  async function sendAccountEmail(to, subject, text) {
+    if (!cfg.smtp.host || !cfg.smtp.from) throw new Error('Account email is not configured (SMTP_HOST / SMTP_FROM)');
+    await getTransporter().sendMail({ from: cfg.smtp.from, to, subject, text });
+  }
+
   // ctx.code is needed by providers that use a pre-approved template (MSG91).
   async function sendSms(phone, text, ctx = {}) {
     const provider = cfg.otp.smsProvider;
@@ -84,7 +89,7 @@ export function createMessenger(cfg = config, deps = {}) {
     throw new Error(`Unknown SMS provider "${provider}"`);
   }
 
-  return { sendEmail, sendSms };
+  return { sendEmail, sendAccountEmail, sendSms };
 }
 
 export const messenger = createMessenger();

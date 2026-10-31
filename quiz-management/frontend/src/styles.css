@@ -279,6 +279,7 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
 .login-card h1 { margin:0 0 8px; color:var(--portal-ink); font-size:28px; letter-spacing:-.8px; }
 .login-card > .muted { margin-bottom:22px; }
 .login-card label:not(.check) { margin-top:15px; }
+.login-recovery-link { display:block; margin:12px auto 0; font-size:12px; }
 .result-page { max-width:900px; margin:0 auto; }
 .result-hero { padding:28px; background:linear-gradient(140deg,var(--card),var(--portal-lilac)); }
 .result-hero h1 { margin:0 0 18px; color:var(--portal-ink); font-size:clamp(23px,3vw,32px); }

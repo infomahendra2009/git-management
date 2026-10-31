@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 
 const empty = { name: '', email: '', phone: '', role: 'STUDENT' };
@@ -10,6 +10,19 @@ export default function Users({ canManage }) {
   const [form, setForm] = useState(empty);
   const [err, setErr] = useState('');
   const [notice, setNotice] = useState('');
+  const [resetTarget, setResetTarget] = useState(null);
+  const [resetBusy, setResetBusy] = useState(false);
+  const confirmResetRef = useRef(null);
+
+  useEffect(() => {
+    if (!resetTarget) return undefined;
+    confirmResetRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && !resetBusy) setResetTarget(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [resetTarget, resetBusy]);
 
   const load = async () => {
     const params = new URLSearchParams();
@@ -38,12 +51,17 @@ export default function Users({ canManage }) {
     try { await api(`/users/${u.id}/unlock`, { method: 'POST' }); load(); } catch (e) { setErr(e.message); }
   };
 
-  const reset = async (u) => {
-    if (!confirm(`Reset password for ${u.name}?`)) return;
+  const reset = async () => {
+    if (!resetTarget || resetBusy) return;
+    setErr('');
+    setNotice('');
+    setResetBusy(true);
     try {
-      const r = await api(`/users/${u.id}/reset-password`, { method: 'POST' });
-      setNotice(`New temporary password for ${u.name}: ${r.tempPassword}`);
+      const r = await api(`/users/${resetTarget.id}/reset-password`, { method: 'POST' });
+      setNotice(`New temporary password for ${resetTarget.name}: ${r.tempPassword} — share it securely; it is shown only once. The user must change it after signing in.`);
+      setResetTarget(null);
     } catch (e) { setErr(e.message); }
+    finally { setResetBusy(false); }
   };
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -102,7 +120,7 @@ export default function Users({ canManage }) {
                   {canManage && (
                     <td>
                       <div className="row">
-                        <button className="secondary" onClick={() => reset(u)}>Reset pw</button>
+                        <button className="secondary" onClick={() => { setErr(''); setResetTarget(u); }}>Reset pw</button>
                         {u.lockedUntil && new Date(u.lockedUntil) > new Date() && <button onClick={() => unlock(u)}>Unlock</button>}
                         <button className={u.isActive ? 'danger' : ''} onClick={() => toggle(u)}>{u.isActive ? 'Disable' : 'Enable'}</button>
                       </div>
@@ -115,6 +133,52 @@ export default function Users({ canManage }) {
           </table>
         </div>
       </div>
+
+      {resetTarget && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !resetBusy) setResetTarget(null);
+          }}
+        >
+          <section
+            aria-labelledby="reset-password-title"
+            aria-describedby="reset-password-description"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            role="dialog"
+            tabIndex={-1}
+          >
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-amber-100 text-xl text-amber-700 dark:bg-amber-950 dark:text-amber-300" aria-hidden="true">!</div>
+            <h2 className="mb-2 text-xl font-bold" id="reset-password-title">Reset this user’s password?</h2>
+            <p className="mb-1 text-sm text-slate-600 dark:text-slate-300">
+              You’re about to reset the password for <strong>{resetTarget.name}</strong>.
+            </p>
+            <p className="mb-6 text-sm leading-6 text-slate-500 dark:text-slate-400" id="reset-password-description">
+              A new temporary password will be generated. The current password will stop working, and the user will have to choose a new password the next time they sign in.
+            </p>
+            <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+              <button
+                className="secondary"
+                disabled={resetBusy}
+                onClick={() => setResetTarget(null)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="danger"
+                disabled={resetBusy}
+                onClick={reset}
+                ref={confirmResetRef}
+                type="button"
+              >
+                {resetBusy ? 'Resetting password…' : 'Yes, reset password'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 }
