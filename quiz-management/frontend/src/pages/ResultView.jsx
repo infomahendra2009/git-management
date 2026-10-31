@@ -1,6 +1,6 @@
 const tfLabel = (v) => (v === true ? 'True' : v === false ? 'False' : '—');
 
-export default function ResultView({ result, onBack }) {
+export default function ResultView({ result, onBack, celebrate = false }) {
   if (!result.resultVisible) {
     return (
       <div className="card result-pending">
@@ -16,6 +16,13 @@ export default function ResultView({ result, onBack }) {
   const chosen = (r, i) => r.yourAnswer && (r.yourAnswer.choice === String(i) || (r.yourAnswer.choices || []).includes(String(i)));
   return (
     <section className="result-page">
+      {celebrate && result.passed && (
+        <div className="result-confetti" aria-hidden="true">
+          {Array.from({ length: 36 }, (_, index) => (
+            <i key={index} style={{ '--confetti-x': `${(index * 37) % 100}%`, '--confetti-delay': `${(index % 9) * -0.42}s`, '--confetti-rotate': `${index * 53}deg` }} />
+          ))}
+        </div>
+      )}
       <div className="card result-hero">
         <span className="eyebrow">ASSESSMENT RESULTS · ATTEMPT {result.attemptNo}</span>
         <h1>{result.quizTitle}</h1>
@@ -24,7 +31,7 @@ export default function ResultView({ result, onBack }) {
           <div className={`result-status ${result.passed ? 'result-passed' : 'result-failed'}`}>{result.passed ? 'Passed' : 'Keep practicing'}<small>{result.percent}% score · pass mark {result.passPercent}%</small></div>
         </div>
         <div className="result-meter"><div className={result.passed ? 'meter-passed' : 'meter-failed'} style={{ width: `${Math.min(100, Math.max(0, result.percent || 0))}%` }} /></div>
-        {onBack && <p><button onClick={onBack}>Back to my quizzes</button></p>}
+        {onBack && <p><button onClick={onBack}>Back to quizzes</button></p>}
       </div>
       {result.review.map((r) => (
         <div className="card result-question-card" key={r.position}>

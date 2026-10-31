@@ -30,10 +30,15 @@ export default function Dashboard({ user, onLogout }) {
   return (
     <div className={isStaff ? 'app-shell staff-shell' : 'app-shell student-shell'}>
       <header className="nav portal-nav">
-        <div className="portal-brand">
+        <button
+          type="button"
+          className="portal-brand portal-brand-home"
+          aria-label="Go to dashboard home"
+          onClick={() => { setTab('home'); setChangingPassword(false); }}
+        >
           <span className="portal-brand-mark">Q</span>
           <span>Quiz<span className="portal-brand-light">Portal</span></span>
-        </div>
+        </button>
         <div className="portal-user">
           <span className="portal-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</span>
           <span className="portal-user-copy"><strong>{user.name}</strong><span>{ROLE_LABEL[user.role]} · {user.userCode}</span></span>

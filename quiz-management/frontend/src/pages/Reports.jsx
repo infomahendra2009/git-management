@@ -331,14 +331,29 @@ export default function Reports({ user }) {
   const tabs = [['overview', 'Overview'], ['quiz', 'By quiz'], ['student', 'By student'], ['class', 'By class'], ...(user.role === 'ADMIN' ? [['teacher', 'By teacher']] : [])];
   return (
     <>
-      <div className="subtabs">
-        {tabs.map(([k, label]) => <button key={k} className={view.name === k ? '' : 'secondary'} onClick={() => go(k)}>{label}</button>)}
+      <div className="subtabs report-tabs" role="tablist" aria-label="Report views">
+        {tabs.map(([k, label]) => (
+          <button
+            key={k}
+            id={`report-tab-${k}`}
+            type="button"
+            role="tab"
+            aria-selected={view.name === k}
+            aria-controls="report-tab-panel"
+            className={view.name === k ? 'report-tab active' : 'report-tab'}
+            onClick={() => go(k)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-      {view.name === 'overview' && <Overview go={go} />}
-      {view.name === 'quiz' && <QuizReport key={view.quizId || 'q'} quizId={view.quizId} go={go} />}
-      {view.name === 'student' && <StudentReport key={view.studentId || 's'} studentId={view.studentId} />}
-      {view.name === 'class' && <ClassReport />}
-      {view.name === 'teacher' && <TeacherReport />}
+      <div id="report-tab-panel" role="tabpanel" aria-labelledby={`report-tab-${view.name}`}>
+        {view.name === 'overview' && <Overview go={go} />}
+        {view.name === 'quiz' && <QuizReport key={view.quizId || 'q'} quizId={view.quizId} go={go} />}
+        {view.name === 'student' && <StudentReport key={view.studentId || 's'} studentId={view.studentId} />}
+        {view.name === 'class' && <ClassReport />}
+        {view.name === 'teacher' && user.role === 'ADMIN' && <TeacherReport />}
+      </div>
     </>
   );
 }

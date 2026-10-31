@@ -61,6 +61,7 @@ function QuestionView({ q, value, onChange }) {
 }
 
 export default function TakeQuiz({ attemptId, onExit }) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [data, setData] = useState(null);
   const [result, setResult] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -77,6 +78,22 @@ export default function TakeQuiz({ attemptId, onExit }) {
   const flagsRef = useRef({});
   const enter = useRef({ qid: null, t: Date.now() });
   const submitting = useRef(false);
+  const sessionRef = useRef(null);
+
+  useEffect(() => {
+    const updateFullscreen = () => setIsFullscreen(document.fullscreenElement === sessionRef.current);
+    document.addEventListener('fullscreenchange', updateFullscreen);
+    return () => document.removeEventListener('fullscreenchange', updateFullscreen);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement === sessionRef.current) await document.exitFullscreen();
+      else await sessionRef.current?.requestFullscreen();
+    } catch (e) {
+      setErr(`Could not change fullscreen mode: ${e.message}`);
+    }
+  };
 
   useEffect(() => {
     api(`/student/attempts/${attemptId}`).then((r) => {
@@ -159,7 +176,7 @@ export default function TakeQuiz({ attemptId, onExit }) {
   };
 
   if (err && !data && !result) return <div className="center"><div className="card"><div className="err">{err}</div><button onClick={onExit}>Back</button></div></div>;
-  if (result) return <div className="container"><ResultView result={result} onBack={onExit} /></div>;
+  if (result) return <div className="quiz-results-screen"><ResultView result={result} onBack={onExit} celebrate /></div>;
   if (!data) return <div className="center muted">Loading quiz…</div>;
 
   const { quiz, questions } = data;
@@ -176,12 +193,17 @@ export default function TakeQuiz({ attemptId, onExit }) {
         : 'Your challenge is underway.';
 
   return (
-    <div className="quiz-session">
+    <div className="quiz-session" ref={sessionRef}>
       <header className="quiz-session-header">
         <div className="quiz-session-brand"><span className="portal-brand-mark">Q</span><span>Quiz<span className="portal-brand-light">Portal</span></span></div>
         <div className="quiz-session-title"><span>ASSESSMENT IN PROGRESS</span><strong>{quiz.title}</strong></div>
-        <div className={`quiz-countdown ${remaining !== null && remaining < 60 ? 'low' : ''}`}>
-          <span aria-hidden="true">◷</span><small>TIME LEFT</small><strong>{remaining !== null ? fmt(remaining) : '--:--:--'}</strong>
+        <div className="quiz-header-actions">
+          <button type="button" className="secondary quiz-fullscreen-button" onClick={toggleFullscreen}>
+            {isFullscreen ? 'Exit full screen' : 'Full screen'}
+          </button>
+          <div className={`quiz-countdown ${remaining !== null && remaining < 60 ? 'low' : ''}`}>
+            <span aria-hidden="true">◷</span><small>TIME LEFT</small><strong>{remaining !== null ? fmt(remaining) : '--:--:--'}</strong>
+          </div>
         </div>
       </header>
       <div className="quiz-session-layout">
