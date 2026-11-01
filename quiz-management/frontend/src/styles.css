@@ -35,6 +35,12 @@ th, td { text-align:left; padding:8px; border-bottom:1px solid var(--border); wh
 textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:15px; font-family:inherit; min-height:80px; }
 .check { display:flex; align-items:center; gap:8px; margin:10px 0 0; color:var(--text); font-size:14px; }
 .check input { width:auto; }
+.quiz-random-builder { margin:18px 0; padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--bg); }
+.quiz-random-builder > .muted { margin:8px 0; }
+.quiz-random-options { max-width:620px; margin:12px 0; align-items:flex-end; }
+.quiz-category-checks { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:4px 12px; max-height:220px; overflow:auto; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--card); }
+.quiz-category-checks .check { margin:4px 0; font-size:12px; }
+.quiz-category-checks .check input { flex:0 0 auto; }
 .picker-check { flex:0 0 auto; min-width:0; margin:0; }
 .picker-check input, .table-wrap td input[type="checkbox"] { width:auto; }
 .picker-pagination { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--card); }
@@ -437,15 +443,16 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
 .india-map-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .india-fullscreen-button { white-space:nowrap; font-size:10px; }
 .india-map-card:fullscreen { width:100vw; height:100vh; max-width:none; align-content:center; overflow:auto; padding:24px; border:0; border-radius:0; background:#0b0d17; }
-.india-map-card:fullscreen .india-map-world { min-height:min(72vh,720px); }
-.india-map-card:fullscreen .india-map-art { min-height:min(72vh,720px); }
+.india-map-card:fullscreen .india-map-world { min-height:min(78vh,900px); }
+.india-map-card:fullscreen .india-map-art { min-height:min(78vh,900px); }
 .india-map-card:fullscreen .india-map-toolbar { position:sticky; top:0; }
-.india-map-world { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr); min-height:500px; overflow:hidden; border:1px solid #292c3c; border-radius:16px; background:#080a14; }
-.india-map-art { position:relative; min-width:0; min-height:500px; overflow:hidden; background:radial-gradient(ellipse at 48% 47%,rgba(46,57,85,.42),transparent 58%); }
+.india-map-world { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr); min-height:min(78vh,820px); overflow:hidden; border:1px solid #292c3c; border-radius:16px; background:#080a14; }
+.india-map-art { position:relative; min-width:0; min-height:min(78vh,820px); overflow:hidden; background:radial-gradient(ellipse at 48% 47%,rgba(46,57,85,.42),transparent 58%); }
 .india-map-silhouette { position:absolute; inset:0; width:100%; height:100%; overflow:visible; filter:drop-shadow(0 10px 24px rgba(0,0,0,.32)); }
-.india-map-region { fill:#f5f5f2; stroke:#747c90; stroke-width:1.4; stroke-linejoin:round; vector-effect:non-scaling-stroke; cursor:pointer; transition:fill .16s ease,stroke .16s ease; }
+.india-map-region { fill:#f5f5f2; stroke:#48536a; stroke-width:2.6; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; cursor:pointer; transition:fill .16s ease,stroke .16s ease; }
+.india-map-region:nth-of-type(even) { fill:#e7edf5; }
 .india-map-region.union-territory { fill:#f6e2bd; }
-.india-map-region:hover,.india-map-region.hovered,.india-map-region.active,.india-map-region:focus { fill:#ff873b; stroke:#fff; stroke-width:2.4; outline:none; }
+.india-map-region:hover,.india-map-region.hovered,.india-map-region.active,.india-map-region:focus { fill:#ff873b; stroke:#fff; stroke-width:2.8; outline:none; }
 .india-map-status { position:absolute; inset:45% 8% auto; margin:0; color:#e4e6ee; text-align:center; font-size:13px; }
 .india-map-status.error { color:#ffb5a7; }
 .india-map-empty { fill:#e4e6ee; text-anchor:middle; font-size:22px; }
@@ -584,7 +591,8 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .india-neighbor-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .india-map-card { padding:10px; }
   .india-map-world { grid-template-columns:minmax(0,1fr); }
-  .india-map-art { min-height:420px; }
+  .india-map-world { min-height:0; }
+  .india-map-art { min-height:min(76vh,700px); }
   .india-map-info { padding:18px; border-top:1px solid #242737; border-left:0; }
   .india-map-info h3 { font-size:22px; }
   .india-capital-game { padding:20px 14px; }
@@ -624,7 +632,7 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .solar-mission-card { padding:20px; }
   .solar-page-actions button { padding:9px 10px; font-size:10px; }
   .india-map-card { grid-template-columns:1fr; padding:10px; }
-  .india-map-art { min-height:360px; }
+  .india-map-art { min-height:min(72vh,600px); }
   .india-game-score { top:17px; right:14px; }
   .india-match-board { grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr); gap:5px; }
   .india-match-option { min-height:38px; gap:5px; padding:7px 5px; font-size:9px; }

@@ -5,6 +5,9 @@ export default function Login({ config, onLogin }) {
   const [mode, setMode] = useState('password');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [code, setCode] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -73,7 +76,12 @@ export default function Login({ config, onLogin }) {
             <label htmlFor="id">Email / Phone / User ID</label>
             <input id="id" value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoFocus required />
             <label htmlFor="pw">Password</label>
-            <input id="pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <div style={{ position: 'relative' }}>
+              <input id="pw" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} style={{ paddingRight: 54 }} required />
+              <button type="button" className="linkbtn" aria-label={showPassword ? 'Hide password' : 'Show password'} title={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword((visible) => !visible)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', padding: 4 }}>
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showPassword && <path d="m4 4 16 16" />}</svg>
+              </button>
+            </div>
             <div style={{ marginTop: 16 }}><button disabled={busy} style={{ width: '100%' }}>Login</button></div>
             {config.passwordResetEnabled && <button type="button" className="linkbtn login-recovery-link" onClick={() => { setMode('forgot'); setErr(''); setMsg(''); }}>Forgot password?</button>}
           </form>
@@ -121,9 +129,19 @@ export default function Login({ config, onLogin }) {
             <label htmlFor="reset-code">6-digit email code</label>
             <input id="reset-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={resetCode} onChange={(e) => setResetCode(e.target.value)} required />
             <label htmlFor="new-password">New password (min 8 characters)</label>
-            <input id="new-password" type="password" autoComplete="new-password" minLength={8} maxLength={100} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+            <div style={{ position: 'relative' }}>
+              <input id="new-password" type={showNewPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={100} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={{ paddingRight: 54 }} required />
+              <button type="button" className="linkbtn" aria-label={showNewPassword ? 'Hide new password' : 'Show new password'} title={showNewPassword ? 'Hide password' : 'Show password'} onClick={() => setShowNewPassword((visible) => !visible)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', padding: 4 }}>
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showNewPassword && <path d="m4 4 16 16" />}</svg>
+              </button>
+            </div>
             <label htmlFor="confirm-new-password">Confirm new password</label>
-            <input id="confirm-new-password" type="password" autoComplete="new-password" minLength={8} maxLength={100} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <div style={{ position: 'relative' }}>
+              <input id="confirm-new-password" type={showConfirmPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={100} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ paddingRight: 54 }} required />
+              <button type="button" className="linkbtn" aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} title={showConfirmPassword ? 'Hide password' : 'Show password'} onClick={() => setShowConfirmPassword((visible) => !visible)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', padding: 4 }}>
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showConfirmPassword && <path d="m4 4 16 16" />}</svg>
+              </button>
+            </div>
             <div style={{ marginTop: 16 }}><button disabled={busy} style={{ width: '100%' }}>{busy ? 'Updating…' : 'Reset password'}</button></div>
             <button type="button" className="linkbtn login-recovery-link" onClick={() => { setMode('forgot'); setResetCode(''); setErr(''); setMsg(''); }}>Request another code</button>
           </form>

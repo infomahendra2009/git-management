@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { randomInt } from 'crypto';
 import { prisma } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { isReleased } from '../services/attempts.js';
@@ -34,6 +35,24 @@ const settingsSchema = z
   });
 
 const firstError = (p) => p.error.issues[0]?.message || 'Invalid input';
+const randomSelectionSchema = z.object({
+  categories: z.array(z.string().trim().min(1).max(80)).min(1).max(50),
+  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).nullable().optional(),
+  limitPerCategory: z.coerce.number().int().min(1).max(50),
+}).superRefine((value, ctx) => {
+  if (new Set(value.categories).size !== value.categories.length) {
+    ctx.addIssue({ code: 'custom', message: 'Choose each category only once' });
+  }
+});
+
+function randomSample(items, count) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const otherIndex = randomInt(index + 1);
+    [shuffled[index], shuffled[otherIndex]] = [shuffled[otherIndex], shuffled[index]];
+  }
+  return shuffled.slice(0, count);
+}
 
 async function owned(req, include) {
   return prisma.quiz.findFirst({ where: { id: req.params.id, ...scope(req) }, include });
@@ -50,8 +69,42 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const p = settingsSchema.safeParse(req.body);
   if (!p.success) return res.status(400).json({ error: firstError(p) });
-  const quiz = await prisma.quiz.create({ data: { ...p.data, ownerId: req.user.id } });
-  res.status(201).json({ quiz });
+  let selectedQuestionIds = [];
+  if (req.body.randomSelection !== undefined) {
+    const selection = randomSelectionSchema.safeParse(req.body.randomSelection);
+    if (!selection.success) return res.status(400).json({ error: firstError(selection) });
+    const { categories, difficulty, limitPerCategory } = selection.data;
+    const questions = await prisma.question.findMany({
+      where: {
+        ...scope(req),
+        category: { in: categories },
+        ...(difficulty ? { difficulty } : {}),
+      },
+      select: { id: true, category: true },
+    });
+    const byCategory = new Map(categories.map((category) => [category, []]));
+    questions.forEach((question) => byCategory.get(question.category)?.push(question.id));
+    const missingCategories = categories.filter((category) => !byCategory.get(category)?.length);
+    if (missingCategories.length) {
+      return res.status(400).json({
+        error: `No questions match the selected filters for: ${missingCategories.join(', ')}`,
+      });
+    }
+    selectedQuestionIds = randomSample(
+      categories.flatMap((category) => randomSample(byCategory.get(category), limitPerCategory)),
+      categories.reduce((total, category) => total + Math.min(byCategory.get(category).length, limitPerCategory), 0),
+    );
+  }
+  const quiz = await prisma.$transaction(async (tx) => {
+    const created = await tx.quiz.create({ data: { ...p.data, ownerId: req.user.id } });
+    if (selectedQuestionIds.length) {
+      await tx.quizQuestion.createMany({
+        data: selectedQuestionIds.map((questionId, position) => ({ quizId: created.id, questionId, position })),
+      });
+    }
+    return created;
+  });
+  res.status(201).json({ quiz, ...(req.body.randomSelection !== undefined ? { randomQuestionCount: selectedQuestionIds.length } : {}) });
 });
 
 router.get('/:id', async (req, res) => {

@@ -238,18 +238,22 @@ export default function SolarSystemModule({ initialPage = 0 }) {
   const matchedCapitals = new Set(capitalRound.regions.filter((region) => matchedRegions.has(region.name)).map((region) => region.name));
   const mapShapes = useMemo(() => {
     const aliases = new Map([
-      ['National Capital Territory of Delhi', 'Delhi'],
-      ['NCT of Delhi', 'Delhi'],
+      ['nationalcapitalterritoryofdelhi', 'delhi'],
+      ['nctofdelhi', 'delhi'],
+      ['andamanandnicobar', 'andamanandnicobarislands'],
+      ['orissa', 'odisha'],
+      ['uttaranchal', 'uttarakhand'],
+      ['pondicherry', 'puducherry'],
     ]);
     const featuresByName = new Map(indiaBoundaries.map((feature) => {
-      const sourceName = feature.properties.shapeName;
-      return [normalizeRegionName(aliases.get(sourceName) || sourceName), feature];
+      const sourceName = normalizeRegionName(feature.properties.shapeName);
+      return [aliases.get(sourceName) || sourceName, feature];
     }));
     const matched = indianRegions.map((region) => ({
       region,
       feature: featuresByName.get(normalizeRegionName(region.name)),
     })).filter((item) => item.feature);
-    if (!matched.length) return { viewBox: '0 0 800 900', shapes: [] };
+    if (!matched.length) return { viewBox: '0 0 800 900', shapes: [], missing: indianRegions };
     let minLongitude = Infinity;
     let maxLongitude = -Infinity;
     let minLatitude = Infinity;
@@ -272,7 +276,7 @@ export default function SolarSystemModule({ initialPage = 0 }) {
     ];
     const shapes = matched.map(({ region, feature }) => {
       const path = getFeatureRings(feature.geometry).map((ring) => {
-        const stride = Math.max(1, Math.ceil(ring.length / 180));
+        const stride = Math.max(1, Math.ceil(ring.length / 700));
         const simplified = ring.filter((_, index) => index % stride === 0 || index === ring.length - 1);
         return `${simplified.map((position, index) => {
           const [x, y] = project(position);
@@ -281,7 +285,11 @@ export default function SolarSystemModule({ initialPage = 0 }) {
       }).join(' ');
       return { region, path };
     });
-    return { viewBox: '0 0 800 900', shapes };
+    return {
+      viewBox: '0 0 800 900',
+      shapes,
+      missing: indianRegions.filter((region) => !matched.some((item) => item.region.name === region.name)),
+    };
   }, [indiaBoundaries]);
   const zoomBy = (amount) => setZoom((current) => Math.min(1.7, Math.max(0.7, Math.round((current + amount) * 10) / 10)));
   const onPage = (nextPage) => {
@@ -495,11 +503,11 @@ export default function SolarSystemModule({ initialPage = 0 }) {
               <h3>{displayRegion.name}</h3>
               <p>{displayRegion.kind}</p>
               <div className="india-map-capital"><span>CAPITAL</span><strong>{displayRegion.capital}</strong></div>
-              <small>Hover over a marker to preview. Click to keep this region selected.</small>
+              <small>Hover over a state to preview it. Click to keep it selected.</small>
               <div className="india-map-neighbors"><span>NEAR INDIA</span><strong>Pakistan · Nepal · Bhutan · Bangladesh · Myanmar</strong></div>
             </aside>
           </div>
-          <div className="india-map-legend"><span><i /> State</span><span><i /> Union territory</span><span>Hover or select a region to explore</span><small>{INDIA_BOUNDARY_ATTRIBUTION} <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer">Source and license</a></small></div>
+          <div className="india-map-legend"><span><i /> State</span><span><i /> Union territory</span><span>{mapShapes.shapes.length} of 36 regions mapped</span><small>{mapShapes.missing.length > 0 && `Missing boundaries: ${mapShapes.missing.map((region) => region.name).join(', ')}. `}{INDIA_BOUNDARY_ATTRIBUTION} <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer">Source and license</a></small></div>
         </div>
         <article className="india-region-detail">
           <span className={`india-region-mark ${displayRegion.kind === 'Union territory' ? 'union-territory' : ''}`} aria-hidden="true">IN</span>

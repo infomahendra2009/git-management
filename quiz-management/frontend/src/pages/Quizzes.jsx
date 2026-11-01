@@ -22,12 +22,68 @@ function Check({ label, value, onChange }) {
 function Settings({ s, setS, onSave, busy, isNew }) {
   const set = (k) => (e) => setS({ ...s, [k]: e.target.value });
   const chk = (k) => (v) => setS({ ...s, [k]: v });
+  const [categories, setCategories] = useState([]);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [randomEnabled, setRandomEnabled] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [randomDifficulty, setRandomDifficulty] = useState('');
+  const [limitPerCategory, setLimitPerCategory] = useState(10);
+  const [randomError, setRandomError] = useState('');
+
+  useEffect(() => {
+    if (!isNew) return;
+    api('/questions/categories')
+      .then((result) => setCategories(result.categories))
+      .catch((error) => setCategoriesError(error.message));
+  }, [isNew]);
+
+  const toggleCategory = (category) => setSelectedCategories((current) => (
+    current.includes(category) ? current.filter((value) => value !== category) : [...current, category]
+  ));
+  const submit = (event) => {
+    event.preventDefault();
+    setRandomError('');
+    if (randomEnabled && selectedCategories.length === 0) {
+      setRandomError('Select at least one category for random question selection.');
+      return;
+    }
+    onSave(randomEnabled ? {
+      categories: selectedCategories,
+      difficulty: randomDifficulty || null,
+      limitPerCategory: Number(limitPerCategory),
+    } : null);
+  };
   return (
-    <form className="card" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
+    <form className="card" onSubmit={submit}>
       <label>Quiz title</label>
       <input value={s.title} onChange={set('title')} required />
       <label>Description / instructions</label>
       <textarea value={s.description} onChange={set('description')} />
+      {isNew && <section className="quiz-random-builder">
+        <Check label="Randomly add questions by category" value={randomEnabled} onChange={setRandomEnabled} />
+        {randomEnabled && <>
+          <p className="muted">Choose one or more categories. Questions will be randomly selected from each chosen category.</p>
+          <div className="row quiz-random-options">
+            <label>Limit per category (1–50)
+              <input type="number" min="1" max="50" required value={limitPerCategory} onChange={(event) => setLimitPerCategory(event.target.value)} />
+            </label>
+            <label>Difficulty
+              <select value={randomDifficulty} onChange={(event) => setRandomDifficulty(event.target.value)}>
+                <option value="">Any difficulty</option><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option>
+              </select>
+            </label>
+          </div>
+          <div className="quiz-category-checks" role="group" aria-label="Categories for random question selection">
+            {categories.map((category) => <label className="check" key={category}>
+              <input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => toggleCategory(category)} />
+              {category}
+            </label>)}
+            {categories.length === 0 && !categoriesError && <p className="muted">No question categories found in your bank.</p>}
+          </div>
+          {categoriesError && <p className="err" role="alert">Could not load question categories: {categoriesError}</p>}
+          {randomError && <p className="err" role="alert">{randomError}</p>}
+        </>}
+      </section>}
       <div className="row">
         <div><label>Pass percentage</label><input type="number" min="0" max="100" value={s.passPercent} onChange={set('passPercent')} /></div>
         <div><label>Time limit (minutes, blank = none)</label><input type="number" min="1" value={s.timeLimitMinutes} onChange={set('timeLimitMinutes')} /></div>
@@ -325,12 +381,20 @@ function QuizEditor({ id: initialId, onBack }) {
   };
   useEffect(() => { load().catch((e) => setErr(e.message)); }, []);
 
-  const saveSettings = async () => {
+  const saveSettings = async (randomSelection) => {
     setErr(''); setMsg(''); setBusy(true);
     const body = { ...s, passPercent: Number(s.passPercent), attemptsAllowed: Number(s.attemptsAllowed), timeLimitMinutes: s.timeLimitMinutes === '' ? '' : Number(s.timeLimitMinutes), releaseAt: toIso(s.releaseAt), startsAt: toIso(s.startsAt), endsAt: toIso(s.endsAt) };
     try {
       if (id) { await api(`/quizzes/${id}`, { method: 'PUT', body }); setMsg('Settings saved.'); await load(); }
-      else { const r = await api('/quizzes', { method: 'POST', body }); setId(r.quiz.id); await load(r.quiz.id); setSection('questions'); setMsg('Quiz created. Now add questions.'); }
+      else {
+        const r = await api('/quizzes', { method: 'POST', body: { ...body, ...(randomSelection ? { randomSelection } : {}) } });
+        setId(r.quiz.id);
+        await load(r.quiz.id);
+        setSection('questions');
+        setMsg(r.randomQuestionCount
+          ? `Quiz created with ${r.randomQuestionCount} randomly selected question(s).`
+          : 'Quiz created. Now add questions.');
+      }
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
   };
 

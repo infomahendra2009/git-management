@@ -41,6 +41,8 @@ Note: when running directly, add `DATABASE_URL=...` to `backend/.env` (Docker bu
 ## Phase 1 includes
 - Roles and permissions: admin manages users; teacher sees students; student sees own profile
 - Unique email, phone and user ID per user; phone mandatory
+- Admin user management: create students in bulk from CSV and add them to a class, edit names and mobile numbers, and activate/deactivate selected accounts (admins cannot change their own status)
+- Login and password-reset forms include accessible show/hide password controls
 - Forced password change on first login; admin password reset (temp password shown once)
 - Password login + env-switchable OTP login (console provider; SMS/email providers plug in at `backend/src/services/otp.js`)
 - Rate-limited login, hashed passwords and OTPs, generic errors (no account enumeration), audit log for user changes
@@ -58,7 +60,7 @@ In CSV: text-input accepted answers are separated by `|` (or commas if there is 
 
 ## Phase 3 includes
 - **Classes / batches:** teachers and admins group students; teachers see only their own classes
-- **Quiz builder:** settings (pass %, time limit, attempts, open/close window, question order, one-at-a-time, progress bar, allow going back), pick and order questions from your bank, assign to classes and/or individual students, publish / unpublish, clone, delete (blocked once attempts exist)
+- **Quiz builder:** settings (pass %, time limit, attempts, open/close window, question order, one-at-a-time, progress bar, allow going back), pick and order questions from your bank, or randomly add 1–50 questions per selected category with an optional difficulty filter, assign to classes and/or individual students, publish / unpublish, clone, delete (blocked once attempts exist)
 - **Taking a quiz (students):** start, resume after refresh or re-login, question palette, flag for review, autosave, countdown timer
 - **Integrity:** the deadline is kept on the server; attempts are auto-submitted when time runs out (also if the browser is closed; a sweep runs every 30 s). During an attempt the API never sends correct answers or explanations. Each attempt keeps its own frozen copy of the questions, so later edits to the question bank never change a grade
 - **Auto-grading:** multiple choice, multiple select (all-or-nothing or partial marks), true/false, text input

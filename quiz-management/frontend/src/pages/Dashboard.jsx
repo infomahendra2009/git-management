@@ -98,7 +98,7 @@ export default function Dashboard({ user, onLogout }) {
         {!changingPassword && tab === 'india-map' && (isAdmin || (!isStaff && solarSystemAssigned)) && <SolarSystemModule initialPage={4} />}
         {!changingPassword && tab === 'questions' && isStaff && <Questions user={user} />}
         {!changingPassword && tab === 'classes' && isStaff && <Classes />}
-        {!changingPassword && tab === 'users' && isStaff && <Users canManage={isAdmin} />}
+        {!changingPassword && tab === 'users' && isStaff && <Users canManage={isAdmin} currentUserId={user.id} />}
         {!changingPassword && tab === 'results' && !isStaff && <StudentResults />}
         {!changingPassword && tab === 'myquizzes' && !isStaff && <StudentQuizzes key={refresh} onTake={setTaking} />}
       </div>
