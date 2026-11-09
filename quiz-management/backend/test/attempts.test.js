@@ -55,14 +55,18 @@ test('attempt totals and pass mark', () => {
 test('students never receive answers or explanations during an attempt', () => {
   const q = {
     type: 'MULTIPLE_SELECT', text: 'Pick', imageUrl: null, imageAlt: null, points: 1, explanation: 'SECRET-EXPLANATION',
+    category: 'VOCABULARY_PRONUNCIATION',
     shuffleOptions: true, partialScoring: true, caseSensitive: false, matchMode: 'EXACT', tfAnswer: true,
     acceptedAnswers: ['SECRET-ANSWER'], options: opts(true, false, true),
   };
   const aq = { id: 'x', position: 0, snapshot: buildSnapshot(q), answer: null, flagged: false };
-  const json = JSON.stringify(sanitizeForStudent(aq));
+  const studentQuestion = sanitizeForStudent(aq);
+  const json = JSON.stringify(studentQuestion);
   for (const leak of ['isCorrect', 'tfAnswer', 'acceptedAnswers', 'SECRET', 'explanation', 'partialScoring']) {
     assert.ok(!json.includes(leak), `leaked ${leak}`);
   }
+  assert.equal(studentQuestion.isVocabulary, true);
+  assert.ok(!('category' in studentQuestion));
   // shuffled snapshot keeps the same set of options
   assert.equal(aq.snapshot.options.filter((o) => o.isCorrect).length, 2);
 });

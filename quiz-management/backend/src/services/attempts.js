@@ -31,7 +31,7 @@ export function sanitizeForStudent(aq) {
     position: aq.position,
     type: s.type,
     text: s.text,
-    category: s.category,
+    isVocabulary: s.category === 'VOCABULARY_PRONUNCIATION',
     imageUrl: s.imageUrl,
     imageAlt: s.imageAlt,
     points: s.points,

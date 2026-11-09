@@ -25,7 +25,7 @@ export default function Login({ config, onLogin }) {
 
   const submitPassword = (e) => {
     e.preventDefault();
-    run(async () => onLogin(await api('/auth/login', { method: 'POST', body: { identifier, password } })));
+    run(async () => onLogin(await api('/auth/login', { method: 'POST', body: { identifier: identifier.trim(), password: password.trim() } })));
   };
   const sendOtp = (e) => {
     e.preventDefault();
@@ -41,16 +41,17 @@ export default function Login({ config, onLogin }) {
   const requestPasswordReset = (e) => {
     e.preventDefault();
     run(async () => {
-      const r = await api('/auth/forgot-password', { method: 'POST', body: { email: identifier } });
+      const r = await api('/auth/forgot-password', { method: 'POST', body: { email: identifier.trim() } });
       setMode('reset');
       setMsg(r.message);
     });
   };
   const resetPassword = (e) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) return setErr('New passwords do not match');
+    const trimmedPassword = newPassword.trim();
+    if (trimmedPassword !== confirmPassword.trim()) return setErr('New passwords do not match');
     run(async () => {
-      await api('/auth/reset-password', { method: 'POST', body: { email: identifier, code: resetCode, newPassword } });
+      await api('/auth/reset-password', { method: 'POST', body: { email: identifier.trim(), code: resetCode.trim(), newPassword: trimmedPassword } });
       setPassword('');
       setResetCode('');
       setNewPassword('');
@@ -83,7 +84,7 @@ export default function Login({ config, onLogin }) {
               </button>
             </div>
             <div style={{ marginTop: 16 }}><button disabled={busy} style={{ width: '100%' }}>Login</button></div>
-            {config.passwordResetEnabled && <button type="button" className="linkbtn login-recovery-link" onClick={() => { setMode('forgot'); setErr(''); setMsg(''); }}>Forgot password?</button>}
+            <button type="button" className="linkbtn login-recovery-link" onClick={() => { setMode('forgot'); setErr(''); setMsg(''); }}>Forgot password?</button>
           </form>
         )}
 
@@ -119,7 +120,8 @@ export default function Login({ config, onLogin }) {
           <form onSubmit={requestPasswordReset}>
             <label htmlFor="reset-email">Account email</label>
             <input id="reset-email" type="email" autoComplete="email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} required />
-            <div style={{ marginTop: 16 }}><button disabled={busy} style={{ width: '100%' }}>{busy ? 'Sending…' : 'Email me a reset code'}</button></div>
+            {!config.passwordResetEnabled && <p className="muted">Email password reset is not configured. Please contact your administrator.</p>}
+            <div style={{ marginTop: 16 }}><button disabled={busy || !config.passwordResetEnabled} style={{ width: '100%' }}>{busy ? 'Sending…' : 'Email me a reset code'}</button></div>
             <button type="button" className="linkbtn login-recovery-link" onClick={() => { setMode('password'); setErr(''); setMsg(''); }}>Back to sign in</button>
           </form>
         )}

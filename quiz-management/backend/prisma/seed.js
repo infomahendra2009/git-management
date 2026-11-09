@@ -36,25 +36,11 @@ function vocabularyQuestion(entry, entries) {
   };
 }
 
-async function seedVocabulary(ownerId) {
-  const vocabulary = JSON.parse(await readFile(vocabularyUrl, 'utf8'));
-  if (!Array.isArray(vocabulary.sourceWords) || !Array.isArray(vocabulary.entries) || vocabulary.entries.length < 4) {
-    throw new Error('Vocabulary JSON must contain sourceWords and at least four entries');
-  }
-  const sourceWords = new Set(vocabulary.sourceWords);
-  const seen = new Set();
-  for (const entry of vocabulary.entries) {
-    if (!entry || typeof entry.word !== 'string' || typeof entry.meaning !== 'string'
-      || !sourceWords.has(entry.word) || !entry.meaning.trim() || seen.has(entry.word)) {
-      throw new Error(`Invalid or duplicate vocabulary entry: ${entry?.word || '(missing word)'}`);
-    }
-    seen.add(entry.word);
-  }
-
+async function seedVocabularyQuestions(ownerId, entries) {
   const questions = [];
-  for (const entry of vocabulary.entries) {
+  for (const entry of entries) {
     const externalId = `vocabulary:${entry.word}`;
-    const data = vocabularyQuestion(entry, vocabulary.entries);
+    const data = vocabularyQuestion(entry, entries);
     const optionRows = data.options.map((option, position) => ({ ...option, imageUrl: null, position }));
     const question = await prisma.question.upsert({
       where: { ownerId_externalId: { ownerId, externalId } },
@@ -71,21 +57,42 @@ async function seedVocabulary(ownerId) {
     });
     questions.push(question);
   }
+  return questions;
+}
 
-  const classes = await prisma.class.findMany({ select: { id: true, name: true } });
-  const targets = classes.length ? classes : [null];
+async function seedVocabulary(ownerId) {
+  const vocabulary = JSON.parse(await readFile(vocabularyUrl, 'utf8'));
+  if (!Array.isArray(vocabulary.sourceWords) || !Array.isArray(vocabulary.entries) || vocabulary.entries.length < 4) {
+    throw new Error('Vocabulary JSON must contain sourceWords and at least four entries');
+  }
+  const sourceWords = new Set(vocabulary.sourceWords);
+  const seen = new Set();
+  for (const entry of vocabulary.entries) {
+    if (!entry || typeof entry.word !== 'string' || typeof entry.meaning !== 'string'
+      || !sourceWords.has(entry.word) || !entry.meaning.trim() || seen.has(entry.word)) {
+      throw new Error(`Invalid or duplicate vocabulary entry: ${entry?.word || '(missing word)'}`);
+    }
+    seen.add(entry.word);
+  }
+
+  const classes = await prisma.class.findMany({ select: { id: true, name: true, ownerId: true } });
+  const targets = classes.length ? classes : [{ id: null, name: null, ownerId }];
+  let totalQuestions = 0;
   for (const classRow of targets) {
-    const title = classRow ? `Vocabulary Practice - ${classRow.name}` : 'Vocabulary Practice (assign to a class)';
-    const existing = classRow
+    const quizOwnerId = classRow.ownerId;
+    const questions = await seedVocabularyQuestions(quizOwnerId, vocabulary.entries);
+    totalQuestions = questions.length;
+    const title = classRow.id ? `Vocabulary Practice - ${classRow.name}` : 'Vocabulary Practice (assign to a class)';
+    const existing = classRow.id
       ? await prisma.quiz.findFirst({
-        where: { ownerId, title: { startsWith: 'Vocabulary Practice -' }, assignments: { some: { classId: classRow.id } } },
+        where: { ownerId: quizOwnerId, title: { startsWith: 'Vocabulary Practice -' }, assignments: { some: { classId: classRow.id } } },
       })
-      : await prisma.quiz.findFirst({ where: { ownerId, title: 'Vocabulary Practice (assign to a class)' } });
+      : await prisma.quiz.findFirst({ where: { ownerId: quizOwnerId, title } });
     const quizData = {
-      ownerId,
+      ownerId: quizOwnerId,
       title,
       description: 'Choose each word’s English meaning and optionally practise saying the word aloud.',
-      status: classRow ? 'PUBLISHED' : 'DRAFT',
+      status: classRow.id ? 'PUBLISHED' : 'DRAFT',
       passPercent: 50,
       attemptsAllowed: 3,
       questionOrder: 'RANDOM',
@@ -107,7 +114,7 @@ async function seedVocabulary(ownerId) {
       }),
     ]);
 
-    if (classRow) {
+    if (classRow.id) {
       await prisma.quizAssignment.upsert({
         where: { quizId_classId: { quizId: quiz.id, classId: classRow.id } },
         create: { quizId: quiz.id, classId: classRow.id },
@@ -115,7 +122,7 @@ async function seedVocabulary(ownerId) {
       });
     }
   }
-  console.log(`Seeded ${questions.length} vocabulary questions for ${classes.length || 0} classes.`);
+  console.log(`Seeded ${totalQuestions} vocabulary questions for ${classes.length || 0} classes.`);
 }
 
 try {

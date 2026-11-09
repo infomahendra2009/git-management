@@ -9,9 +9,18 @@ function QuestionView({ q, value, onChange, vocabularyVoice }) {
   const [voiceMessage, setVoiceMessage] = useState('');
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
-  const word = q.category === 'VOCABULARY_PRONUNCIATION' ? q.text.match(/"([^"]+)"/)?.[1] : '';
+  const word = q.isVocabulary ? q.text.match(/"([^"]+)"/)?.[1] : '';
 
-  useEffect(() => () => recognitionRef.current?.abort(), []);
+  useEffect(() => () => {
+    const recognition = recognitionRef.current;
+    if (recognition) {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognition.abort();
+    }
+    window.speechSynthesis?.cancel();
+  }, []);
 
   const playWord = () => {
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
@@ -42,7 +51,9 @@ function QuestionView({ q, value, onChange, vocabularyVoice }) {
       const target = word.toLocaleLowerCase('en-US').replace(/[^a-z0-9]/g, '');
       const heard = Array.from(event.results[0], (result) => result.transcript.trim());
       const matched = heard.some((transcript) => transcript.toLocaleLowerCase('en-US').replace(/[^a-z0-9]/g, '') === target);
-      setVoiceMessage(matched ? `Recognized "${word}". The spoken word matches.` : `Heard "${heard[0] || 'nothing'}" instead of "${word}". Try again.`);
+      setVoiceMessage(matched
+        ? `Speech recognition heard "${word}". This confirms the word, not pronunciation quality.`
+        : `Heard "${heard[0] || 'nothing'}" instead of "${word}". Try again.`);
     };
     recognition.onerror = (event) => {
       const message = event.error === 'not-allowed'

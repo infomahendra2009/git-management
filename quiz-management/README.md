@@ -22,6 +22,16 @@ With `OTP_PROVIDER=console`, codes are printed in `docker compose logs api`.
 
 Password reset by email is enabled when `SMTP_HOST` and `SMTP_FROM` are configured in `.env`. Configure the SMTP credentials (`SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`) for your mail provider, then rebuild/restart the API. Reset codes expire after 15 minutes by default and are limited to 5 verification attempts; override with `PASSWORD_RESET_EXPIRY_MINUTES` and `PASSWORD_RESET_MAX_ATTEMPTS`.
 
+### Vocabulary and pronunciation practice
+
+The API seed reads `backend/prisma/data/vocabulary.json` and creates a vocabulary quiz for each existing class. Class quizzes use the class owner's question bank and are published and assigned to that class. If there are no classes yet, the seed creates a draft quiz owned by the admin; create a class and rerun `npm run seed` (or restart the API container) to create its assigned quiz. The JSON includes the words extracted from `Random Word Reader.html` and starter definitions; add definitions to its `entries` array to include more words. Re-running the seed refreshes these seeded vocabulary questions.
+
+Set `VOCABULARY_VOICE_MODE` in `.env` to `off`, `playback`, `check`, or `both` (`both` by default), then restart the API. Playback speaks the word using the browser's built-in text-to-speech. Checking uses the browser's speech recognition and reports whether it recognized the expected word; it is not an expert pronunciation score. Browser and language support varies, microphone permission and a secure context (HTTPS or localhost) may be required, and speech recognition may send audio to the browser provider. Meaning questions remain usable when voice features are disabled or unavailable.
+
+### Adding shared React pages
+
+Add a `.jsx` file directly inside `frontend/src/share-page/` and export a default React component. Vite discovers these pages when the frontend is built. The filename becomes the page ID (for example, `ReadingGame.jsx` becomes `reading-game`); optional `pageTitle` and `pageDescription` named exports control its display name and description. The sample is `frontend/src/share-page/SamplePage.jsx`. After rebuilding/restarting the frontend, an admin can assign each discovered page to classes or individual students in **Shared pages**. Assigned pages appear in those students' navigation. Class assignments include current and future class members. Page component code is included in the frontend bundle, so assignments control in-app visibility rather than protect bundled code or page data from direct access.
+
 ## Run directly (no Docker)
 Requires Node 20+ and MySQL 8.
 ```bash

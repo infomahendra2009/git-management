@@ -34,7 +34,7 @@ router.get('/config', (_req, res) => res.json({
 }));
 
 router.post('/login', limiter, async (req, res) => {
-  const body = z.object({ identifier: z.string().min(1).max(190), password: z.string().min(1).max(200) }).safeParse(req.body);
+  const body = z.object({ identifier: z.string().min(1).max(190), password: z.string().trim().min(1).max(200) }).safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: 'Identifier and password required' });
   const user = await findUser(body.data.identifier);
 
@@ -153,7 +153,7 @@ router.post('/reset-password', resetSubmitLimiter, async (req, res) => {
   const body = z.object({
     email: z.string().email().max(190).transform(normalizeEmail),
     code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
-    newPassword: z.string().min(8).max(100),
+    newPassword: z.string().trim().min(8).max(100),
   }).safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: body.error.issues[0]?.message || 'Invalid request' });
 

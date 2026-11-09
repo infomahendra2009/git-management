@@ -12,6 +12,8 @@ import AuditLog from './AuditLog.jsx';
 import TakeQuiz from './TakeQuiz.jsx';
 import ChangePassword from './ChangePassword.jsx';
 import SolarSystemModule, { SolarSystemAssignments } from './SolarSystemModule.jsx';
+import SharedPageAssignments from './SharedPageAssignments.jsx';
+import { sharedPages } from '../share-page/registry.js';
 
 const ROLE_LABEL = { ADMIN: 'Admin', TEACHER: 'Teacher', STUDENT: 'Student' };
 
@@ -22,6 +24,8 @@ export default function Dashboard({ user, onLogout }) {
   const [refresh, setRefresh] = useState(0);
   const [solarSystemAssigned, setSolarSystemAssigned] = useState(false);
   const [solarAccessError, setSolarAccessError] = useState('');
+  const [sharedPageIds, setSharedPageIds] = useState([]);
+  const [sharedPageAccessError, setSharedPageAccessError] = useState('');
   const isAdmin = user.role === 'ADMIN';
   const isStaff = isAdmin || user.role === 'TEACHER';
 
@@ -32,11 +36,20 @@ export default function Dashboard({ user, onLogout }) {
       .catch((error) => setSolarAccessError(error.message));
   }, [isStaff]);
 
+  useEffect(() => {
+    if (isStaff) return;
+    api('/shared-pages/access')
+      .then((result) => setSharedPageIds(result.pageIds))
+      .catch((error) => setSharedPageAccessError(error.message));
+  }, [isStaff]);
+
   if (taking) return <TakeQuiz attemptId={taking} onExit={() => { setTaking(null); setRefresh((n) => n + 1); setTab('myquizzes'); }} />;
 
   const tabs = isStaff
-    ? [['home', 'Home'], ['quizzes', 'Quizzes'], ['grading', 'Grading'], ['reports', 'Reports'], ['questions', 'Questions'], ['classes', 'Classes'], ['users', isAdmin ? 'Users' : 'Students'], ...(isAdmin ? [['solar-module', 'Solar System'], ['india-map', 'India map'], ['audit', 'Audit log']] : [])]
-    : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results'], ...(solarSystemAssigned ? [['solar-learning', 'Learning module'], ['india-map', 'India map']] : [])];
+    ? [['home', 'Home'], ['quizzes', 'Quizzes'], ['grading', 'Grading'], ['reports', 'Reports'], ['questions', 'Questions'], ['classes', 'Classes'], ['users', isAdmin ? 'Users' : 'Students'], ...(isAdmin ? [['solar-module', 'Solar System'], ['india-map', 'India map'], ['shared-pages', 'Shared pages'], ['audit', 'Audit log']] : [])]
+    : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results'], ...(solarSystemAssigned ? [['solar-learning', 'Learning module'], ['india-map', 'India map']] : []), ...sharedPages.filter((page) => sharedPageIds.includes(page.id)).map((page) => [`shared-page:${page.id}`, page.title])];
+  const selectedSharedPage = sharedPages.find((page) => tab === `shared-page:${page.id}` && sharedPageIds.includes(page.id));
+  const SharedPage = selectedSharedPage?.Component;
 
   return (
     <div className={isStaff ? 'app-shell staff-shell' : 'app-shell student-shell'}>
@@ -94,13 +107,16 @@ export default function Dashboard({ user, onLogout }) {
         {!changingPassword && tab === 'reports' && isStaff && <Reports user={user} />}
         {!changingPassword && tab === 'audit' && isAdmin && <AuditLog />}
         {!changingPassword && tab === 'solar-module' && isAdmin && <SolarSystemAssignments />}
+        {!changingPassword && tab === 'shared-pages' && isAdmin && <SharedPageAssignments />}
         {!changingPassword && tab === 'solar-learning' && !isStaff && solarSystemAssigned && <SolarSystemModule />}
         {!changingPassword && tab === 'india-map' && (isAdmin || (!isStaff && solarSystemAssigned)) && <SolarSystemModule initialPage={4} />}
+        {!changingPassword && SharedPage && <SharedPage />}
         {!changingPassword && tab === 'questions' && isStaff && <Questions user={user} />}
         {!changingPassword && tab === 'classes' && isStaff && <Classes />}
         {!changingPassword && tab === 'users' && isStaff && <Users canManage={isAdmin} currentUserId={user.id} />}
         {!changingPassword && tab === 'results' && !isStaff && <StudentResults />}
         {!changingPassword && tab === 'myquizzes' && !isStaff && <StudentQuizzes key={refresh} onTake={setTaking} />}
+        {!isStaff && sharedPageAccessError && <div className="card err" role="alert">Could not check your shared pages: {sharedPageAccessError}</div>}
       </div>
       <footer className="portal-footer">QuizPortal <span>·</span> Learn at your own pace</footer>
     </div>

@@ -15,6 +15,7 @@ import reportRoutes from './routes/reports.js';
 import gradingRoutes from './routes/grading.js';
 import auditRoutes from './routes/audit.js';
 import learningModuleRoutes from './routes/learningModule.js';
+import sharedPageRoutes from './routes/sharedPages.js';
 
 export function createApp() {
   const app = express();
@@ -47,6 +48,7 @@ export function createApp() {
   app.use('/api/grading', gradingRoutes);
   app.use('/api/audit', auditRoutes);
   app.use('/api/learning-module', learningModuleRoutes);
+  app.use('/api/shared-pages', sharedPageRoutes);
 
   app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
   app.use((err, _req, res, _next) => {
