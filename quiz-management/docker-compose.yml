@@ -42,6 +42,11 @@ services:
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-3000}:80"
+      - "${HTTPS_PORT:-3443}:443"
+    environment:
+      LOCAL_HTTPS_IP: ${LOCAL_HTTPS_IP:-192.168.137.1}
+    volumes:
+      - ./frontend/certs:/etc/nginx/certs
     depends_on:
       - api
 

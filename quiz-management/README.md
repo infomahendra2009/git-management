@@ -12,6 +12,10 @@ docker compose up -d --build
 Open http://localhost:8080 and log in with the seed admin from `.env`
 (default `admin@example.com` / `ChangeMe@123`; you must change it on first login).
 
+The web container serves HTTP on `WEB_PORT` (default `3000`) and HTTPS on `HTTPS_PORT` (default `3443`). On first startup it creates a local certificate authority and a server certificate for `localhost` and `LOCAL_HTTPS_IP` (default `192.168.137.1`), saved under `frontend/certs/`. Set `LOCAL_HTTPS_IP` in `.env` to the PC's current shared-Wi-Fi IPv4 address before startup if it differs from that default; changing the IP regenerates the server certificate. Restart with `docker compose up -d --build web` after changing the certificate IP.
+
+On the phone, open `https://192.168.137.1:3443` (replace the address if needed). To let the browser use the microphone, install and trust `frontend/certs/ca.crt` on the phone as a CA certificate, then reopen the HTTPS page and allow microphone access. Transfer the CA certificate to the phone privately (for example, over USB); do not install certificates from an untrusted source. Keep `frontend/certs/ca.key` private and never share it. The HTTP site remains available at `http://192.168.137.1:3000`, but microphone access requires HTTPS. The certificate is local/self-signed and intended for trusted devices on your private network, not public internet deployment.
+
 ### Install as an app (PWA)
 Open the site in a supported browser and choose **Install app** when the install button appears, or use the browser's install option. On phones, use the browser's **Add to Home Screen** option if no install button appears. Installation requires HTTPS, except for `localhost`.
 
