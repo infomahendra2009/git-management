@@ -5,6 +5,10 @@ const num = (v, d) => (v === undefined || v === '' ? d : Number(v));
 const WEAK_SECRETS = ['dev-secret-change-me', 'change_me_to_a_long_random_string'];
 
 const legacyProvider = process.env.OTP_PROVIDER || 'console';
+const vocabularyVoiceMode = (process.env.VOCABULARY_VOICE_MODE || 'both').toLowerCase();
+if (!['off', 'playback', 'check', 'both'].includes(vocabularyVoiceMode)) {
+  throw new Error('VOCABULARY_VOICE_MODE must be off, playback, check, or both');
+}
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
@@ -16,6 +20,11 @@ export const config = {
   // Leave empty when the web app and API share one domain (the Docker setup does).
   corsOrigin: process.env.CORS_ORIGIN || '',
   apiRatePerMinute: num(process.env.API_RATE_LIMIT_PER_MIN, 3000),
+  vocabularyVoice: {
+    mode: vocabularyVoiceMode,
+    playbackEnabled: vocabularyVoiceMode === 'playback' || vocabularyVoiceMode === 'both',
+    recognitionEnabled: vocabularyVoiceMode === 'check' || vocabularyVoiceMode === 'both',
+  },
   lockout: { maxFailures: num(process.env.LOGIN_MAX_FAILURES, 5), minutes: num(process.env.LOGIN_LOCK_MINUTES, 15) },
   passwordReset: { expiryMinutes: num(process.env.PASSWORD_RESET_EXPIRY_MINUTES, 15), maxAttempts: num(process.env.PASSWORD_RESET_MAX_ATTEMPTS, 5) },
   otp: {

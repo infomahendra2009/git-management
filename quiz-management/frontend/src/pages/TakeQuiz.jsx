@@ -5,11 +5,81 @@ import ResultView from './ResultView.jsx';
 const isAnswered = (a) => !!a && ((a.choice !== undefined) || (a.choices && a.choices.length > 0) || typeof a.value === 'boolean' || (a.text && a.text.trim() !== ''));
 const fmt = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-function QuestionView({ q, value, onChange }) {
+function QuestionView({ q, value, onChange, vocabularyVoice }) {
+  const [voiceMessage, setVoiceMessage] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const word = q.category === 'VOCABULARY_PRONUNCIATION' ? q.text.match(/"([^"]+)"/)?.[1] : '';
+
+  useEffect(() => () => recognitionRef.current?.abort(), []);
+
+  const playWord = () => {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      setVoiceMessage('Pronunciation playback is not available in this browser.');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new window.SpeechSynthesisUtterance(word);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.8;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const checkWord = () => {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceMessage('Voice recognition is not supported in this browser. You can still answer the meaning question.');
+      return;
+    }
+    const recognition = new Recognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 3;
+    recognitionRef.current = recognition;
+    setVoiceMessage('Listening… Say the word clearly.');
+    setListening(true);
+    recognition.onresult = (event) => {
+      const target = word.toLocaleLowerCase('en-US').replace(/[^a-z0-9]/g, '');
+      const heard = Array.from(event.results[0], (result) => result.transcript.trim());
+      const matched = heard.some((transcript) => transcript.toLocaleLowerCase('en-US').replace(/[^a-z0-9]/g, '') === target);
+      setVoiceMessage(matched ? `Recognized "${word}". The spoken word matches.` : `Heard "${heard[0] || 'nothing'}" instead of "${word}". Try again.`);
+    };
+    recognition.onerror = (event) => {
+      const message = event.error === 'not-allowed'
+        ? 'Microphone access was denied. Allow microphone access to use the voice check.'
+        : event.error === 'no-speech'
+          ? 'No speech was detected. Try again and speak clearly.'
+          : `Voice check failed: ${event.error}.`;
+      setVoiceMessage(message);
+      setListening(false);
+    };
+    recognition.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+      setVoiceMessage((message) => message === 'Listening… Say the word clearly.'
+        ? 'No word was recognized. Try again and speak clearly.'
+        : message);
+    };
+    try {
+      recognition.start();
+    } catch (error) {
+      setListening(false);
+      recognitionRef.current = null;
+      setVoiceMessage(`Could not start voice recognition: ${error.message}`);
+    }
+  };
+
   return (
     <div>
       <p className="challenge-question-text" style={{ whiteSpace: 'pre-wrap', fontSize: 17 }}>{q.text}</p>
       {q.imageUrl && <img className="thumb" style={{ maxHeight: 300 }} src={q.imageUrl} alt={q.imageAlt || ''} />}
+      {word && (
+        <div className="row" style={{ marginTop: 12 }}>
+          {vocabularyVoice?.playbackEnabled && <button type="button" className="secondary small" onClick={playWord}>Hear pronunciation</button>}
+          {vocabularyVoice?.recognitionEnabled && <button type="button" className="secondary small" onClick={checkWord} disabled={listening}>{listening ? 'Listening…' : 'Check my pronunciation'}</button>}
+          {voiceMessage && <p className="muted" role="status" aria-live="polite">{voiceMessage}</p>}
+        </div>
+      )}
       <div style={{ marginTop: 12 }}>
         {q.type === 'MULTIPLE_CHOICE' && q.options.map((o, index) => (
           <label key={o.key} className={`choice ${value?.choice === o.key ? 'sel' : ''}`}>
@@ -223,7 +293,7 @@ export default function TakeQuiz({ attemptId, onExit }) {
                   <button type="button" className={`secondary small ${flags[x.id] ? 'flag-active' : ''}`} onClick={() => toggleFlag(x)}>{flags[x.id] ? '⚑ Saved for review' : '⚐ Flag challenge'}</button>
                 </div>
                 <p className="challenge-encouragement">{questMessage}</p>
-                <QuestionView q={x} value={answers[x.id]} onChange={(v) => setAnswer(x, v)} />
+                <QuestionView q={x} value={answers[x.id]} onChange={(v) => setAnswer(x, v)} vocabularyVoice={data.vocabularyVoice} />
             </article>
           ))}
           {err && <div className="err">{err}</div>}

@@ -1,0 +1,27 @@
+services:
+  server:
+    build: ./server
+    environment:
+      - DATA_FILE=/data/lessons.json
+    volumes:
+      - lessons-data:/data
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  # Optional: free pronunciation model (see the guide). Not tested; check the
+  # OpenPronounce README for build steps before you enable it.
+  # pronounce:
+  #   build: ./pronounce
+  #   expose:
+  #     - "8000"
+  #   restart: unless-stopped
+
+volumes:
+  lessons-data:

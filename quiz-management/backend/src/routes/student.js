@@ -6,6 +6,7 @@ import { buildStudentReport } from '../services/reports.js';
 import {
   GRACE_MS, shuffle, buildSnapshot, sanitizeForStudent, computeDeadline, finalizeAttempt, parseAnswer, buildResult, isReleased,
 } from '../services/attempts.js';
+import { config } from '../config.js';
 
 const router = Router();
 router.use(requireAuth, requireRole('STUDENT'));
@@ -111,6 +112,7 @@ async function attemptPayload(a) {
     return {
       status: 'IN_PROGRESS', serverNow: new Date(), deadlineAt: a.deadlineAt,
       quiz: { title: a.quiz.title, oneAtATime: a.quiz.oneAtATime, showProgress: a.quiz.showProgress, allowReview: a.quiz.allowReview },
+      vocabularyVoice: config.vocabularyVoice,
       questions: questions.map(sanitizeForStudent),
     };
   }

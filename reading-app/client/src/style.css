@@ -1,0 +1,28 @@
+:root { --paper:#fbfaf6; --ink:#1d2b3a; --ok:#1f7a4d; --bad:#c0392b; --line:#d9d6cc; --accent:#2d5b8a; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:Georgia,serif; line-height:1.6; }
+main { max-width:720px; margin:0 auto; padding:24px 16px 64px; }
+h1,h2 { font-family:system-ui,sans-serif; margin:0 0 12px; }
+input,textarea,select { width:100%; padding:10px; font:inherit; border:1px solid var(--line); border-radius:6px; background:#fff; margin-bottom:10px; }
+button { font:600 15px system-ui,sans-serif; padding:10px 16px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; margin-right:8px; }
+button.ghost { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+button:disabled { opacity:.5; cursor:default; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:3px solid #f0b429; }
+section { border-top:1px solid var(--line); padding-top:20px; margin-top:24px; }
+.reader { font-size:1.35rem; line-height:2.1; }
+.w { padding:0 2px; border-radius:3px; }
+.w.ok { color:var(--ok); }
+.w.bad { color:var(--bad); text-decoration:underline wavy; text-underline-offset:5px; font-weight:700; }
+.heard { color:#6b7480; font-style:italic; min-height:1.6em; }
+.score { font:700 1.2rem system-ui,sans-serif; }
+@media (prefers-reduced-motion: no-preference) { button { transition: opacity .15s; } }
+.tabs { margin-bottom:12px; }
+.w.near { color:#b7791f; text-decoration:underline wavy; text-underline-offset:5px; font-weight:700; cursor:pointer; }
+.w.bad, .w.miss { cursor:pointer; }
+.w.miss { color:#6b7480; text-decoration:line-through; }
+.legend { font:14px system-ui,sans-serif; }
+li { margin-bottom:4px; }
+
+/* green and red underlines for the student's reading */
+.w.ok   { color:var(--ok);  text-decoration:underline solid var(--ok);  text-decoration-thickness:3px; text-underline-offset:6px; }
+.w.near, .w.bad, .w.miss { color:var(--bad); text-decoration:underline solid var(--bad); text-decoration-thickness:3px; text-underline-offset:6px; font-weight:700; cursor:pointer; }
