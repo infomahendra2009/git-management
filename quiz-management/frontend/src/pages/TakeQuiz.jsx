@@ -35,6 +35,10 @@ function QuestionView({ q, value, onChange, vocabularyVoice }) {
   };
 
   const checkWord = () => {
+    if (!window.isSecureContext) {
+      setVoiceMessage('Microphone access requires a secure connection. Open this site over HTTPS on your phone; an HTTP 192.168.x.x address is not secure.');
+      return;
+    }
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) {
       setVoiceMessage('Voice recognition is not supported in this browser. You can still answer the meaning question.');
@@ -60,6 +64,8 @@ function QuestionView({ q, value, onChange, vocabularyVoice }) {
         ? 'Microphone access was denied. Allow microphone access to use the voice check.'
         : event.error === 'no-speech'
           ? 'No speech was detected. Try again and speak clearly.'
+          : event.error === 'network'
+            ? 'Speech recognition could not connect. Check your internet connection and try again.'
           : `Voice check failed: ${event.error}.`;
       setVoiceMessage(message);
       setListening(false);

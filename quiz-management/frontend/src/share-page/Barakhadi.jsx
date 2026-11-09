@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+export const pageTitle = "Barakhadi";
+export const pageDescription = "Explore Hindi letter-vowel combinations, hear their sounds, and practise by row.";
 
 /* ---------- data ---------- */
 const MATRAS = ["", "ा", "ि", "ी", "ु", "ू", "े", "ै", "ो", "ौ", "ं", "ः"];
@@ -18,43 +21,109 @@ const HINDI = [
 ];
 const ENGLISH = "BCDFGHJKLMNPQRSTVWXYZ".split("");
 
-const say = (text, lang) => {
-  try {
-    if (!window.speechSynthesis) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang;
-    u.rate = 0.8;
-    speechSynthesis.speak(u);
-  } catch (e) {}
-};
+const HINDI_ROWS = HINDI.map(([hi, en]) => ({
+  label: hi,
+  sub: en,
+  cells: MATRAS.map((matra, i) => ({ main: hi + matra, sub: en + VOWELS_EN[i], lang: "hi-IN" })),
+}));
+const ENGLISH_ROWS = ENGLISH.map((letter) => ({
+  label: letter,
+  sub: "",
+  cells: VOWELS_EN.map((vowel) => ({ main: letter.toLowerCase() + vowel, sub: "", lang: "en-US" })),
+}));
+const HINDI_HEADS = VOWELS_HI.map((vowel, i) => [vowel, VOWELS_EN[i]]);
+const ENGLISH_HEADS = VOWELS_EN.map((vowel) => [vowel, ""]);
 
 /* ---------- component ---------- */
 export default function Barakhadi() {
   const [tab, setTab] = useState("hindi");
   const [sel, setSel] = useState(null); // { main, sub, lang }
+  const [filter, setFilter] = useState("");
+  const [speechStatus, setSpeechStatus] = useState("");
+  const [speaking, setSpeaking] = useState(false);
+  const speechRun = useRef(0);
 
-  const rows =
-    tab === "hindi"
-      ? HINDI.map(([hi, en]) => ({
-          label: hi,
-          sub: en,
-          cells: MATRAS.map((m, i) => ({ main: hi + m, sub: en + VOWELS_EN[i], lang: "hi-IN" })),
-        }))
-      : ENGLISH.map((L) => ({
-          label: L,
-          sub: "",
-          cells: VOWELS_EN.map((v) => ({ main: L.toLowerCase() + v, sub: "", lang: "en-US" })),
-        }));
+  const hindi = tab === "hindi";
+  const rows = useMemo(() => {
+    const allRows = hindi ? HINDI_ROWS : ENGLISH_ROWS;
+    const query = filter.trim().toLocaleLowerCase();
+    return query
+      ? allRows.filter((row) => `${row.label} ${row.sub}`.toLocaleLowerCase().includes(query))
+      : allRows;
+  }, [filter, hindi]);
+  const heads = hindi ? HINDI_HEADS : ENGLISH_HEADS;
 
-  const heads =
-    tab === "hindi"
-      ? VOWELS_HI.map((h, i) => [h, VOWELS_EN[i]])
-      : VOWELS_EN.map((v) => [v, ""]);
+  const stopSpeech = () => {
+    speechRun.current += 1;
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+    setSpeechStatus("Audio stopped.");
+  };
 
-  const pick = (c) => {
-    setSel(c);
-    say(c.main, c.lang);
+  useEffect(() => () => {
+    speechRun.current += 1;
+    window.speechSynthesis?.cancel();
+  }, []);
+
+  const speak = (text, lang) => new Promise((resolve, reject) => {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+      reject(new Error("Speech playback is not supported in this browser."));
+      return;
+    }
+    try {
+      const utterance = new window.SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = 0.8;
+      utterance.onend = resolve;
+      utterance.onerror = (event) => {
+        if (event.error === "canceled" || event.error === "interrupted") resolve();
+        else reject(new Error(`Speech playback failed${event.error ? `: ${event.error}` : "."}`));
+      };
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      reject(error);
+    }
+  });
+
+  const playCell = async (cell) => {
+    const run = ++speechRun.current;
+    window.speechSynthesis?.cancel();
+    setSel(cell);
+    setSpeaking(true);
+    setSpeechStatus(`Playing ${cell.main}…`);
+    try {
+      await speak(cell.main, cell.lang);
+      if (speechRun.current === run) setSpeechStatus("Audio finished.");
+    } catch (error) {
+      if (speechRun.current === run) setSpeechStatus(error.message || "Could not play audio.");
+    } finally {
+      if (speechRun.current === run) setSpeaking(false);
+    }
+  };
+
+  const playRow = async (row) => {
+    const run = ++speechRun.current;
+    window.speechSynthesis?.cancel();
+    setSpeaking(true);
+    setSpeechStatus(`Practising the ${row.label} row…`);
+    try {
+      for (const cell of row.cells) {
+        if (speechRun.current !== run) return;
+        setSel(cell);
+        await speak(cell.main, cell.lang);
+      }
+      if (speechRun.current === run) setSpeechStatus(`Finished the ${row.label} row.`);
+    } catch (error) {
+      if (speechRun.current === run) setSpeechStatus(error.message || "Could not play audio.");
+    } finally {
+      if (speechRun.current === run) setSpeaking(false);
+    }
+  };
+
+  const practiseRandom = () => {
+    if (!rows.length) return;
+    const row = rows[Math.floor(Math.random() * rows.length)];
+    playCell(row.cells[Math.floor(Math.random() * row.cells.length)]);
   };
 
   return (
@@ -65,10 +134,10 @@ export default function Barakhadi() {
         <p className="sub">Each letter joined with the 12 vowel forms. Tap any cell to hear it.</p>
 
         <div className="tabs" role="tablist">
-          <button role="tab" aria-selected={tab === "hindi"} onClick={() => { setTab("hindi"); setSel(null); }}>
+          <button role="tab" aria-selected={hindi} onClick={() => { stopSpeech(); setTab("hindi"); setSel(null); }}>
             Hindi · क से ज्ञ
           </button>
-          <button role="tab" aria-selected={tab === "english"} onClick={() => { setTab("english"); setSel(null); }}>
+          <button role="tab" aria-selected={!hindi} onClick={() => { stopSpeech(); setTab("english"); setSel(null); }}>
             English · A to Z
           </button>
         </div>
@@ -78,17 +147,28 @@ export default function Barakhadi() {
             <>
               <span className="showbig">{sel.main}</span>
               {sel.sub && <span className="showsub">{sel.sub}</span>}
+              <button type="button" className="replay" onClick={() => playCell(sel)}>Hear selected sound</button>
             </>
           ) : (
             <span className="showsub">Tap a cell</span>
           )}
         </div>
 
+        <div className="tools">
+          <label className="search-label">
+            <span>Find a {hindi ? "Hindi letter" : "English letter"}</span>
+            <input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={hindi ? "Try क or kh" : "Try B"} />
+          </label>
+          <button type="button" className="tool-button" onClick={practiseRandom} disabled={!rows.length}>Random practice</button>
+          {speaking && <button type="button" className="tool-button" onClick={stopSpeech}>Stop audio</button>}
+        </div>
+        {speechStatus && <p className="speech-status" role="status" aria-live="polite">{speechStatus}</p>}
+
         <div className="wrap">
           <table>
             <thead>
               <tr>
-                <th className="corner">{tab === "hindi" ? "व्यंजन" : "Letter"}</th>
+                <th className="corner">{hindi ? "व्यंजन" : "Letter"}</th>
                 {heads.map(([a, b], i) => (
                   <th key={i}>
                     <span className="hm">{a}</span>
@@ -103,13 +183,16 @@ export default function Barakhadi() {
                   <th scope="row" className="rowhead">
                     <span className="hm">{r.label}</span>
                     {r.sub && <span className="hs">{r.sub}</span>}
+                    <button type="button" className="row-play" onClick={() => playRow(r)} aria-label={`Hear all sounds in the ${r.label} row`}>Hear row</button>
                   </th>
-                  {r.cells.map((c, i) => (
-                    <td key={i}>
-                      <button
-                        className={sel && sel.main === c.main ? "cell on" : "cell"}
-                        onClick={() => pick(c)}
-                      >
+                {r.cells.map((c, i) => (
+                  <td key={i}>
+                    <button
+                      type="button"
+                      aria-pressed={!!sel && sel.main === c.main}
+                      className={sel && sel.main === c.main ? "cell on" : "cell"}
+                      onClick={() => playCell(c)}
+                    >
                         <span className="cm">{c.main}</span>
                         {c.sub && <span className="cs">{c.sub}</span>}
                       </button>
@@ -122,9 +205,10 @@ export default function Barakhadi() {
         </div>
 
         <p className="note">
-          {tab === "hindi"
+          {hindi
             ? "Capital letters (T, D, N, Sh) mark the harder, tongue-curled sounds."
             : "These are sound-practice syllables, not always real English words. The vowels A, E, I, O, U are the sounds themselves, so only consonants get rows."}
+          {" "}Pronunciation playback depends on the voices installed in your browser or device.
         </p>
       </main>
     </div>
@@ -146,12 +230,21 @@ background:var(--bg);color:var(--ink);min-height:100vh;font:17px/1.4 "Atkinson H
 .bk .show{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px;margin-bottom:14px;text-align:center;min-height:92px;display:flex;flex-direction:column;justify-content:center}
 .bk .showbig{font-size:2.8rem;font-weight:700;line-height:1.2}
 .bk .showsub{color:var(--mute);font-size:1.2rem}
+.bk .replay,.bk .tool-button,.bk .row-play{border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;padding:5px 9px;cursor:pointer}
+.bk .replay{align-self:center;margin-top:8px}
+.bk .tools{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:8px}
+.bk .search-label{display:grid;gap:4px;min-width:min(100%,240px);margin:0;color:var(--mute);font-size:.82rem}
+.bk .search-label input{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;padding:6px 10px}
+.bk .tool-button{min-height:40px}
+.bk .tool-button:disabled{opacity:.5;cursor:not-allowed}
+.bk .speech-status{min-height:1.4em;margin:4px 0 8px;color:var(--mute);font-size:.9rem}
 .bk .wrap{overflow:auto;max-height:70vh;border:2px solid var(--line);border-radius:14px;background:var(--card)}
 .bk table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
 .bk th,.bk td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;text-align:center}
 .bk thead th{position:sticky;top:0;z-index:2;background:var(--head);padding:6px 4px;min-width:68px}
 .bk .corner{left:0;z-index:3;min-width:76px}
 .bk .rowhead{position:sticky;left:0;z-index:1;background:var(--head);padding:6px 8px;min-width:76px}
+.bk .row-play{margin-top:5px;padding:3px 6px;font-size:.68rem}
 .bk .hm{display:block;font-size:1.35rem;font-weight:700}
 .bk .hs{display:block;font-size:.8rem;color:var(--mute)}
 .bk .cell{display:block;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 4px;cursor:pointer}

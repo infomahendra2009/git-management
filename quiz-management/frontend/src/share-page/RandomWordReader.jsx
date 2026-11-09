@@ -85,6 +85,10 @@ export default function RandomWordReader() {
   };
 
   const checkPronunciation = () => {
+    if (!window.isSecureContext) {
+      setAudioMessage("Microphone access requires a secure connection. Open this site over HTTPS on your phone; an HTTP 192.168.x.x address is not secure.");
+      return;
+    }
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) {
       setAudioMessage("Speech recognition is not supported in this browser. Try Hear it instead.");
@@ -117,6 +121,8 @@ export default function RandomWordReader() {
         ? "Microphone access was denied. Allow microphone access to check your speech."
         : event.error === "no-speech"
           ? "No speech was detected. Try again and speak clearly."
+          : event.error === "network"
+            ? "Speech recognition could not connect. Check your internet connection and try again."
           : `Speech check failed${event.error ? `: ${event.error}` : "."}`;
       setAudioMessage(message);
       setListening(false);
