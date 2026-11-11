@@ -7,10 +7,14 @@ Login by **email, phone or user ID** + password. Optional **OTP** login via `OTP
 ## Run with Docker (recommended)
 ```bash
 cp .env.example .env     # edit passwords, JWT_SECRET, seed admin
+docker volume create quiz-management_mysqldata
+docker volume create quiz-management_uploads
 docker compose up -d --build
 ```
 Open http://localhost:8080 and log in with the seed admin from `.env`
 (default `admin@example.com` / `ChangeMe@123`; you must change it on first login).
+
+Database and uploaded files are stored in the external Docker volumes `quiz-management_mysqldata` and `quiz-management_uploads`. These volume names are fixed and will not change with the project folder name. The initial `docker volume create` commands are safe to rerun: Docker keeps an existing volume and its data. `docker compose down` and `docker compose down --volumes` do not remove external volumes. Do not manually remove these volumes with `docker volume rm` or `docker volume prune`; doing so permanently deletes the associated data. Back up `./backups` separately and keep copies of database backups somewhere outside this computer.
 
 The web container serves HTTP on `WEB_PORT` (default `3000`) and HTTPS on `HTTPS_PORT` (default `3443`). On first startup it creates a local certificate authority and a server certificate for `localhost` and `LOCAL_HTTPS_IP` (default `192.168.137.1`), saved under `frontend/certs/`. Set `LOCAL_HTTPS_IP` in `.env` to the PC's current shared-Wi-Fi IPv4 address before startup if it differs from that default; changing the IP regenerates the server certificate. Restart with `docker compose up -d --build web` after changing the certificate IP.
 

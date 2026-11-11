@@ -6,7 +6,7 @@ export const pageDescription = "Explore Hindi letter-vowel combinations, hear th
 /* ---------- data ---------- */
 const MATRAS = ["", "ा", "ि", "ी", "ु", "ू", "े", "ै", "ो", "ौ", "ं", "ः"];
 const VOWELS_HI = ["अ", "आ", "इ", "ई", "उ", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः"];
-const VOWELS_EN = ["a", "aa", "i", "ee", "u", "oo", "e", "ai", "o", "au", "am", "ah"];
+const VOWELS_EN = ["a", "aa", "i", "ee", "u", "oo", "e", "ai", "o", "au", "an", "ah"];
 
 // [Hindi consonant, English sound]. Capitals mark the harder, tongue-curled sounds.
 const HINDI = [
