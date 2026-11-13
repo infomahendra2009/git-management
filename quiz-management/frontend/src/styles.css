@@ -648,3 +648,96 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
 @media (prefers-reduced-motion:reduce) {
   .result-confetti i { animation:none; display:none; }
 }
+
+/* Responsive layouts shared across portal and standalone learning pages */
+@media (max-width:760px) {
+  html,body,#root { width:100%; min-width:320px; }
+  body { overflow-x:hidden; }
+  img,svg,video { max-width:100%; }
+  .container { width:100%; padding:16px; }
+  .card { padding:18px; }
+  h1,h2,h3,p { overflow-wrap:anywhere; }
+  input,select,textarea { min-width:0; max-width:100%; font-size:16px; }
+  .row { align-items:stretch; }
+  .row > * { min-width:min(100%,180px); }
+  .row > button { min-width:44px; }
+  .row > .card { min-width:100%; }
+  .table-wrap { max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; }
+  .table-wrap table { width:max-content; min-width:100%; }
+  .nav.portal-nav { gap:8px; padding:10px 14px; }
+  .portal-brand { font-size:17px; }
+  .portal-user { min-width:0; gap:7px; }
+  .portal-user button { padding:8px 10px; font-size:12px; }
+  .portal-main { min-height:calc(100vh - 120px); padding:14px; }
+  .tabs.portal-tabs { max-width:100%; margin-bottom:16px; }
+  .portal-tabs button { min-height:42px; }
+  .subtabs:not(.report-tabs) { max-width:100%; flex-wrap:wrap; }
+  .subtabs:not(.report-tabs) button { flex:0 0 auto; }
+  .report-tabs { width:100%; }
+  .student-page-heading { align-items:flex-start; gap:12px; }
+  .quiz-card-content { min-width:0; }
+  .quiz-card-copy { min-width:0; }
+  .quiz-meta { overflow-wrap:anywhere; }
+  .quiz-session-header { min-width:0; }
+  .quiz-session-title { min-width:0; }
+  .quiz-session-title strong { max-width:100%; }
+  .quiz-question-card { min-width:0; }
+  .quiz-question-card .choice { grid-template-columns:auto 28px minmax(0,1fr); }
+  .quiz-question-card .choice-copy { min-width:0; overflow-wrap:anywhere; }
+  .quiz-navigation-actions { flex-wrap:wrap; }
+  .quiz-navigation-actions > button { flex:1 1 130px; }
+  .solar-learning-hero { gap:14px; }
+  .solar-planet-selector { max-width:100%; }
+  .india-map-world { min-width:0; }
+  .india-map-art { min-width:0; }
+  .india-match-option { min-width:0; overflow-wrap:anywhere; }
+  .bk.bk main,.rwr.rwr main,.rtr.rtr main { width:100%; max-width:100%; padding:16px 12px 32px; }
+  .bk.bk .tabs { flex-wrap:wrap; }
+  .bk.bk .tabs button { flex:1 1 145px; }
+  .bk.bk .tools { align-items:stretch; }
+  .bk.bk .search-label { flex:1 1 100%; min-width:0; }
+  .bk.bk .tool-button { flex:1 1 145px; min-width:0; min-height:44px; }
+  .bk.bk .wrap { max-width:100%; max-height:65vh; overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .bk.bk .cell { min-height:44px; }
+  .rwr.rwr .row { justify-content:center; }
+  .rwr.rwr .f { min-height:42px; }
+  .rwr.rwr .btns > button { flex:1 1 145px; min-width:0; min-height:44px; padding:10px 12px; }
+  .rtr.rtr nav { max-width:100%; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; }
+  .rtr.rtr nav button { min-height:44px; }
+}
+
+@media (max-width:480px) {
+  .container { padding:12px; }
+  .card { padding:15px; border-radius:15px; }
+  .nav.portal-nav { flex-wrap:wrap; padding:9px 12px; }
+  .portal-user { margin-left:auto; }
+  .portal-user button { padding:7px 8px; font-size:11px; }
+  .portal-main { padding:12px; }
+  .portal-tabs button { padding:9px 11px; }
+  .student-page-heading { align-items:flex-start; }
+  .heading-spark { flex:0 0 42px; width:42px; height:42px; }
+  .quiz-session-layout { padding:12px 10px 24px; }
+  .quiz-session-header { padding:9px 10px; }
+  .quiz-session-brand { font-size:14px; }
+  .quiz-header-actions { gap:5px; }
+  .quiz-fullscreen-button { padding:7px 6px; font-size:8px; }
+  .quiz-countdown strong { font-size:12px; }
+  .quiz-progress-copy > strong { font-size:15px; }
+  .quiz-question-card { padding:15px 13px; }
+  .quiz-question-card .choice { gap:7px; padding:10px; }
+  .solar-assignment-actions { padding:14px; }
+  .solar-target-list { padding-right:14px; padding-left:14px; }
+  .solar-search-label { margin-right:14px; margin-left:14px; }
+  .solar-search { width:calc(100% - 28px); margin-right:14px; margin-left:14px; }
+  .india-map-art { min-height:min(68vh,520px); }
+  .india-game-heading { padding-right:0; }
+  .india-game-score { position:static; display:flex; align-items:center; justify-content:flex-start; gap:8px; margin-top:12px; }
+  .india-match-board { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+  .india-match-connector { display:none; }
+  .india-match-column { min-width:0; }
+  .india-match-option { min-height:44px; font-size:10px; }
+  .bk.bk .show { padding:12px 8px; }
+  .bk.bk .showbig { font-size:2.2rem; }
+  .bk.bk .wrap { max-height:60vh; }
+  .rwr.rwr .card { padding:22px 10px; }
+}

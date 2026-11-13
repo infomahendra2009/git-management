@@ -31,8 +31,43 @@ const ENGLISH_ROWS = ENGLISH.map((letter) => ({
   sub: "",
   cells: VOWELS_EN.map((vowel) => ({ main: letter.toLowerCase() + vowel, sub: "", lang: "en-US" })),
 }));
+// Example word for each syllable: { syllable: [Hindi word, English meaning] }
+const WORDS = {
+  क: ["कमल", "lotus"], का: ["काम", "work"], कि: ["किताब", "book"], की: ["कीड़ा", "insect"], कु: ["कुत्ता", "dog"], कू: ["कूद", "jump"], के: ["केला", "banana"], कै: ["कैंची", "scissors"], को: ["कोयल", "cuckoo"], कौ: ["कौआ", "crow"], कं: ["कंघी", "comb"],
+  ख: ["खरगोश", "rabbit"], खा: ["खाना", "food"], खि: ["खिड़की", "window"], खी: ["खीर", "rice pudding"], खु: ["खुश", "happy"], खू: ["खूबानी", "apricot"], खे: ["खेल", "game"], खो: ["खोज", "search"],
+  ग: ["गमला", "flower pot"], गा: ["गाय", "cow"], गि: ["गिलास", "glass"], गी: ["गीत", "song"], गु: ["गुड़िया", "doll"], गे: ["गेंद", "ball"], गै: ["गैस", "gas"], गो: ["गोल", "round"], गौ: ["गौरैया", "sparrow"],
+  घ: ["घर", "house"], घा: ["घास", "grass"], घी: ["घी", "ghee"], घो: ["घोड़ा", "horse"],
+  च: ["चम्मच", "spoon"], चा: ["चाँद", "moon"], चि: ["चिड़िया", "bird"], ची: ["चीनी", "sugar"], चु: ["चुप", "quiet"], चू: ["चूहा", "mouse"], चे: ["चेहरा", "face"], चो: ["चोर", "thief"], चौ: ["चौक", "square"],
+  छ: ["छत", "roof"], छा: ["छाता", "umbrella"], छि: ["छिपकली", "lizard"], छु: ["छुट्टी", "holiday"], छू: ["छूना", "to touch"], छे: ["छेद", "hole"], छो: ["छोटा", "small"],
+  ज: ["जल", "water"], जा: ["जादू", "magic"], जि: ["जिराफ", "giraffe"], जी: ["जीभ", "tongue"], जु: ["जुराब", "socks"], जू: ["जूता", "shoe"], जे: ["जेब", "pocket"], जो: ["जोकर", "joker"], जौ: ["जौ", "barley"],
+  झ: ["झगड़ा", "fight"], झा: ["झाड़ू", "broom"], झी: ["झील", "lake"], झू: ["झूला", "swing"], झो: ["झोला", "cloth bag"],
+  ट: ["टमाटर", "tomato"], टो: ["टोपी", "cap"],
+  ठ: ["ठंड", "cold"], ठे: ["ठेला", "cart"],
+  ड: ["डमरू", "small drum"], डा: ["डाक", "mail"], डि: ["डिब्बा", "box"], डो: ["डोरी", "string"],
+  ढ: ["ढक्कन", "lid"], ढो: ["ढोल", "drum"],
+  त: ["तरबूज़", "watermelon"], ता: ["तारा", "star"], ति: ["तितली", "butterfly"], ती: ["तीर", "arrow"], तु: ["तुलसी", "basil"], ते: ["तेल", "oil"], तै: ["तैरना", "to swim"], तो: ["तोता", "parrot"], तौ: ["तौलिया", "towel"],
+  थ: ["थकान", "tiredness"], था: ["थाली", "plate"], थै: ["थैला", "bag"], थो: ["थोड़ा", "a little"],
+  द: ["दरवाज़ा", "door"], दा: ["दादी", "grandmother"], दि: ["दिन", "day"], दी: ["दीपक", "lamp"], दु: ["दुकान", "shop"], दू: ["दूध", "milk"], दे: ["देश", "country"], दो: ["दोस्त", "friend"], दौ: ["दौड़", "run"],
+  ध: ["धनुष", "bow"], धा: ["धागा", "thread"], धू: ["धूप", "sunshine"], धो: ["धोबी", "washerman"],
+  न: ["नल", "tap"], ना: ["नाव", "boat"], नि: ["निशान", "mark"], नी: ["नीला", "blue"], ने: ["नेता", "leader"], नो: ["नोट", "note"], नौ: ["नौ", "nine"],
+  प: ["पतंग", "kite"], पा: ["पानी", "water"], पि: ["पिता", "father"], पी: ["पीला", "yellow"], पु: ["पुल", "bridge"], पू: ["पूरी", "puri (fried bread)"], पे: ["पेड़", "tree"], पै: ["पैर", "foot"], पौ: ["पौधा", "plant"],
+  फ: ["फल", "fruit"], फा: ["फावड़ा", "shovel"], फि: ["फिल्म", "film"], फू: ["फूल", "flower"], फो: ["फोन", "phone"],
+  ब: ["बकरी", "goat"], बा: ["बादल", "cloud"], बि: ["बिल्ली", "cat"], बी: ["बीज", "seed"], बु: ["बुलबुल", "bulbul (songbird)"], बू: ["बूँद", "drop"], बे: ["बेटा", "son"], बै: ["बैल", "ox"], बो: ["बोतल", "bottle"],
+  भा: ["भालू", "bear"], भी: ["भीड़", "crowd"], भू: ["भूख", "hunger"], भे: ["भेड़", "sheep"], भै: ["भैंस", "buffalo"], भो: ["भोजन", "meal"],
+  म: ["मकान", "building"], मा: ["माँ", "mother"], मि: ["मिठाई", "sweets"], मी: ["मीठा", "sweet"], मु: ["मुर्गा", "rooster"], मू: ["मूली", "radish"], मे: ["मेज़", "table"], मो: ["मोर", "peacock"], मौ: ["मौसम", "weather"],
+  या: ["यात्रा", "journey"], यु: ["युद्ध", "war"], यो: ["योग", "yoga"],
+  र: ["रस्सी", "rope"], रा: ["राजा", "king"], रि: ["रिबन", "ribbon"], रु: ["रुपया", "rupee"], रू: ["रूई", "cotton"], रे: ["रेल", "train"], रो: ["रोटी", "flatbread"],
+  ल: ["लकड़ी", "wood"], ला: ["लाल", "red"], लू: ["लू", "hot wind"], लो: ["लोहा", "iron"],
+  व: ["वन", "forest"], वी: ["वीणा", "veena (instrument)"],
+  श: ["शहद", "honey"], शा: ["शाम", "evening"], शि: ["शिक्षक", "teacher"], शी: ["शीशा", "mirror"], शे: ["शेर", "lion"], शौ: ["शौक", "hobby"],
+  स: ["सब्ज़ी", "vegetable"], सा: ["साबुन", "soap"], सि: ["सिक्का", "coin"], सी: ["सीढ़ी", "ladder"], सु: ["सुबह", "morning"], सू: ["सूरज", "sun"], से: ["सेब", "apple"], सै: ["सैनिक", "soldier"], सो: ["सोना", "gold"], सौ: ["सौ", "hundred"],
+  ह: ["हल", "plough"], हा: ["हाथी", "elephant"], हि: ["हिरण", "deer"], हो: ["होली", "Holi"],
+};
 const HINDI_HEADS = VOWELS_HI.map((vowel, i) => [vowel, VOWELS_EN[i]]);
 const ENGLISH_HEADS = VOWELS_EN.map((vowel) => [vowel, ""]);
+
+const VIEW_LABELS = { both: "Hindi + English", hindi: "Hindi only", english: "English only" };
+const NEXT_VIEW = { both: "hindi", hindi: "english", english: "both" };
 
 /* ---------- component ---------- */
 export default function Barakhadi() {
@@ -41,6 +76,8 @@ export default function Barakhadi() {
   const [filter, setFilter] = useState("");
   const [speechStatus, setSpeechStatus] = useState("");
   const [speaking, setSpeaking] = useState(false);
+  const [view, setView] = useState("both"); // "both" | "hindi" | "english"
+  const [autoSound, setAutoSound] = useState(true); // play sound when a cell is tapped
   const speechRun = useRef(0);
 
   const hindi = tab === "hindi";
@@ -52,6 +89,29 @@ export default function Barakhadi() {
       : allRows;
   }, [filter, hindi]);
   const heads = hindi ? HINDI_HEADS : ENGLISH_HEADS;
+
+  const cycleView = () => setView((v) => NEXT_VIEW[v]);
+
+  // Renders a main/sub pair according to the current view (Hindi tab only)
+  const pair = (main, sub, mainCls, subCls) => {
+    if (!hindi || view === "both") {
+      return (
+        <>
+          <span className={mainCls}>{main}</span>
+          {sub && <span className={subCls}>{sub}</span>}
+        </>
+      );
+    }
+    if (view === "hindi") return <span className={mainCls}>{main}</span>;
+    return <span className={mainCls}>{sub}</span>; // English only
+  };
+
+  const switchTab = (next) => {
+    stopSpeech();
+    setTab(next);
+    setSel(null);
+    setView("both");
+  };
 
   const stopSpeech = () => {
     speechRun.current += 1;
@@ -85,7 +145,43 @@ export default function Barakhadi() {
     }
   });
 
-  const playCell = async (cell) => {
+  const toggleAutoSound = () => {
+    if (autoSound) {
+      speechRun.current += 1;
+      window.speechSynthesis?.cancel();
+      setSpeaking(false);
+      setSpeechStatus("Auto sound is off.");
+    } else {
+      setSpeechStatus("Auto sound is on.");
+    }
+    setAutoSound((v) => !v);
+  };
+
+  // force = true plays even when auto sound is off (only the "Hear selected sound" button)
+  const playWord = async (word) => {
+    const run = ++speechRun.current;
+    window.speechSynthesis?.cancel();
+    setSpeaking(true);
+    setSpeechStatus(`Playing ${word}…`);
+    try {
+      await speak(word, "hi-IN");
+      if (speechRun.current === run) setSpeechStatus("Audio finished.");
+    } catch (error) {
+      if (speechRun.current === run) setSpeechStatus(error.message || "Could not play audio.");
+    } finally {
+      if (speechRun.current === run) setSpeaking(false);
+    }
+  };
+
+  const playCell = async (cell, force = false) => {
+    if (!autoSound && !force) {
+      speechRun.current += 1;
+      window.speechSynthesis?.cancel();
+      setSpeaking(false);
+      setSpeechStatus("Auto sound is off. Press “Hear selected sound” to listen.");
+      setSel(cell);
+      return;
+    }
     const run = ++speechRun.current;
     window.speechSynthesis?.cancel();
     setSel(cell);
@@ -123,7 +219,7 @@ export default function Barakhadi() {
   const practiseRandom = () => {
     if (!rows.length) return;
     const row = rows[Math.floor(Math.random() * rows.length)];
-    playCell(row.cells[Math.floor(Math.random() * row.cells.length)]);
+    playCell(row.cells[Math.floor(Math.random() * row.cells.length)]); // respects Auto sound
   };
 
   return (
@@ -134,10 +230,10 @@ export default function Barakhadi() {
         <p className="sub">Each letter joined with the 12 vowel forms. Tap any cell to hear it.</p>
 
         <div className="tabs" role="tablist">
-          <button role="tab" aria-selected={hindi} onClick={() => { stopSpeech(); setTab("hindi"); setSel(null); }}>
+          <button role="tab" aria-selected={hindi} onClick={() => switchTab("hindi")}>
             Hindi · क से ज्ञ
           </button>
-          <button role="tab" aria-selected={!hindi} onClick={() => { stopSpeech(); setTab("english"); setSel(null); }}>
+          <button role="tab" aria-selected={!hindi} onClick={() => switchTab("english")}>
             English · A to Z
           </button>
         </div>
@@ -145,9 +241,15 @@ export default function Barakhadi() {
         <div className="show" aria-live="polite">
           {sel ? (
             <>
-              <span className="showbig">{sel.main}</span>
-              {sel.sub && <span className="showsub">{sel.sub}</span>}
-              <button type="button" className="replay" onClick={() => playCell(sel)}>Hear selected sound</button>
+              {pair(sel.main, sel.sub, "showbig", "showsub")}
+              {hindi && WORDS[sel.main] && (
+                <div className="word">
+                  {view !== "english" && <span className="wordhi">{WORDS[sel.main][0]}</span>}
+                  {view !== "hindi" && <span className="worden">{WORDS[sel.main][1]}</span>}
+                  <button type="button" className="replay" onClick={() => playWord(WORDS[sel.main][0])}>Hear word</button>
+                </div>
+              )}
+              <button type="button" className="replay" onClick={() => playCell(sel, true)}>Hear selected sound</button>
             </>
           ) : (
             <span className="showsub">Tap a cell</span>
@@ -160,6 +262,14 @@ export default function Barakhadi() {
             <input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={hindi ? "Try क or kh" : "Try B"} />
           </label>
           <button type="button" className="tool-button" onClick={practiseRandom} disabled={!rows.length}>Random practice</button>
+          <button type="button" className={autoSound ? "tool-button on" : "tool-button"} onClick={toggleAutoSound} aria-pressed={autoSound}>
+            Auto sound: {autoSound ? "On" : "Off"}
+          </button>
+          {hindi && (
+            <button type="button" className="tool-button" onClick={cycleView}>
+              Show: {VIEW_LABELS[view]}
+            </button>
+          )}
           {speaking && <button type="button" className="tool-button" onClick={stopSpeech}>Stop audio</button>}
         </div>
         {speechStatus && <p className="speech-status" role="status" aria-live="polite">{speechStatus}</p>}
@@ -170,10 +280,7 @@ export default function Barakhadi() {
               <tr>
                 <th className="corner">{hindi ? "व्यंजन" : "Letter"}</th>
                 {heads.map(([a, b], i) => (
-                  <th key={i}>
-                    <span className="hm">{a}</span>
-                    {b && <span className="hs">{b}</span>}
-                  </th>
+                  <th key={i}>{pair(a, b, "hm", "hs")}</th>
                 ))}
               </tr>
             </thead>
@@ -181,20 +288,18 @@ export default function Barakhadi() {
               {rows.map((r) => (
                 <tr key={r.label}>
                   <th scope="row" className="rowhead">
-                    <span className="hm">{r.label}</span>
-                    {r.sub && <span className="hs">{r.sub}</span>}
+                    {pair(r.label, r.sub, "hm", "hs")}
                     <button type="button" className="row-play" onClick={() => playRow(r)} aria-label={`Hear all sounds in the ${r.label} row`}>Hear row</button>
                   </th>
-                {r.cells.map((c, i) => (
-                  <td key={i}>
-                    <button
-                      type="button"
-                      aria-pressed={!!sel && sel.main === c.main}
-                      className={sel && sel.main === c.main ? "cell on" : "cell"}
-                      onClick={() => playCell(c)}
-                    >
-                        <span className="cm">{c.main}</span>
-                        {c.sub && <span className="cs">{c.sub}</span>}
+                  {r.cells.map((c, i) => (
+                    <td key={i}>
+                      <button
+                        type="button"
+                        aria-pressed={!!sel && sel.main === c.main}
+                        className={sel && sel.main === c.main ? "cell on" : "cell"}
+                        onClick={() => playCell(c)}
+                      >
+                        {pair(c.main, c.sub, "cm", "cs")}
                       </button>
                     </td>
                   ))}
@@ -232,10 +337,15 @@ background:var(--bg);color:var(--ink);min-height:100vh;font:17px/1.4 "Atkinson H
 .bk .showsub{color:var(--mute);font-size:1.2rem}
 .bk .replay,.bk .tool-button,.bk .row-play{border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;padding:5px 9px;cursor:pointer}
 .bk .replay{align-self:center;margin-top:8px}
+.bk .word{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;margin-top:6px}
+.bk .wordhi{font-size:1.5rem;font-weight:700}
+.bk .worden{color:var(--mute);font-size:1.1rem}
+.bk .word .replay{margin-top:0}
 .bk .tools{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:8px}
 .bk .search-label{display:grid;gap:4px;min-width:min(100%,240px);margin:0;color:var(--mute);font-size:.82rem}
 .bk .search-label input{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;padding:6px 10px}
 .bk .tool-button{min-height:40px}
+.bk .tool-button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700}
 .bk .tool-button:disabled{opacity:.5;cursor:not-allowed}
 .bk .speech-status{min-height:1.4em;margin:4px 0 8px;color:var(--mute);font-size:.9rem}
 .bk .wrap{overflow:auto;max-height:70vh;border:2px solid var(--line);border-radius:14px;background:var(--card)}
