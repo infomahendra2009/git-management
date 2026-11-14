@@ -48,6 +48,9 @@ export default function Dashboard({ user, onLogout }) {
   const tabs = isStaff
     ? [['home', 'Home'], ['quizzes', 'Quizzes'], ['grading', 'Grading'], ['reports', 'Reports'], ['questions', 'Questions'], ['classes', 'Classes'], ['users', isAdmin ? 'Users' : 'Students'], ...(isAdmin ? [['solar-module', 'Solar System'], ['india-map', 'India map'], ['shared-pages', 'Shared pages'], ['audit', 'Audit log']] : [])]
     : [['home', 'Home'], ['myquizzes', 'My quizzes'], ['results', 'My results'], ...(solarSystemAssigned ? [['solar-learning', 'Learning module'], ['india-map', 'India map']] : []), ...sharedPages.filter((page) => sharedPageIds.includes(page.id)).map((page) => [`shared-page:${page.id}`, page.title])];
+  const MAX_DIRECT_TABS = 6;
+  const primaryTabs = tabs.slice(0, Math.min(MAX_DIRECT_TABS, tabs.length));
+  const moreTabs = tabs.slice(primaryTabs.length);
   const selectedSharedPage = sharedPages.find((page) => tab === `shared-page:${page.id}` && sharedPageIds.includes(page.id));
   const SharedPage = selectedSharedPage?.Component;
 
@@ -72,11 +75,24 @@ export default function Dashboard({ user, onLogout }) {
       </header>
       <div className="container portal-main">
         <nav className={isStaff ? 'tabs portal-tabs staff-tabs' : 'tabs portal-tabs'} aria-label="Main navigation">
-          {tabs.map(([k, label]) => (
+          {primaryTabs.map(([k, label]) => (
             <button key={k} className={tab === k ? 'active' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => { setTab(k); setChangingPassword(false); }}>
               {label}
             </button>
           ))}
+          {moreTabs.length > 0 && (
+            <label className={`portal-more-select ${moreTabs.some(([key]) => key === tab) ? 'active' : ''}`}>
+              <span className="sr-only">More pages</span>
+              <select
+                aria-label="More pages"
+                value={moreTabs.some(([key]) => key === tab) ? tab : ''}
+                onChange={(event) => { setTab(event.target.value); setChangingPassword(false); }}
+              >
+                <option value="" disabled>More</option>
+                {moreTabs.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+              </select>
+            </label>
+          )}
         </nav>
 
         {changingPassword && <ChangePassword onDone={() => setChangingPassword(false)} />}

@@ -147,6 +147,9 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
 .portal-tabs button:hover { color:var(--text); background:var(--bg); box-shadow:none; }
 .portal-tabs button.active { color:#fff; background:linear-gradient(135deg,#7168ed,#574fcd); box-shadow:0 5px 12px rgba(99,91,219,.22); }
 .portal-tabs.staff-tabs { overflow-x:auto; }
+.portal-more-select { display:block; flex:0 0 auto; align-self:center; margin:0; }
+.portal-more-select select { width:auto; min-width:138px; max-width:190px; min-height:40px; padding:8px 32px 8px 12px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--text); font:inherit; font-size:13px; cursor:pointer; }
+.portal-more-select.active select { border-color:var(--brand); color:var(--brand); font-weight:700; }
 .report-tabs { display:flex; gap:7px; width:max-content; max-width:100%; overflow-x:auto; margin:0 0 18px; padding:6px; border:1px solid var(--border); border-radius:14px; background:var(--card); box-shadow:0 4px 16px rgba(34,45,91,.035); }
 .report-tabs .report-tab { flex:0 0 auto; padding:9px 15px; border:0; border-radius:9px; background:transparent; color:var(--muted); font-size:12px; box-shadow:none; }
 .report-tabs .report-tab:hover { transform:none; background:var(--bg); color:var(--text); box-shadow:none; }
@@ -550,6 +553,7 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .portal-logout { padding:7px 10px; font-size:12px; }
   .tabs.portal-tabs { overflow-x:auto; flex-wrap:nowrap; }
   .portal-tabs button { flex:0 0 auto; padding:9px 12px; }
+  .portal-more-select select { min-width:120px; max-width:160px; }
   .student-welcome { min-height:210px; padding:25px; }
   .welcome-art { width:100px; height:100px; margin:0 8px 0 12px; border-radius:28px; }
   .welcome-art span { font-size:58px; }
@@ -714,6 +718,7 @@ input:focus,select:focus,textarea:focus { outline:none; border-color:var(--brand
   .portal-user button { padding:7px 8px; font-size:11px; }
   .portal-main { padding:12px; }
   .portal-tabs button { padding:9px 11px; }
+  .portal-more-select select { min-width:110px; max-width:145px; padding-right:26px; font-size:12px; }
   .student-page-heading { align-items:flex-start; }
   .heading-spark { flex:0 0 42px; width:42px; height:42px; }
   .quiz-session-layout { padding:12px 10px 24px; }

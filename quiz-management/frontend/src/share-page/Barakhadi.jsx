@@ -77,8 +77,13 @@ export default function Barakhadi() {
   const [speechStatus, setSpeechStatus] = useState("");
   const [speaking, setSpeaking] = useState(false);
   const [view, setView] = useState("both"); // "both" | "hindi" | "english"
+  const [showHindiWord, setShowHindiWord] = useState(true);
+  const [showEnglishWord, setShowEnglishWord] = useState(true);
   const [autoSound, setAutoSound] = useState(true); // play sound when a cell is tapped
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const speechRun = useRef(0);
+  const readerRef = useRef(null);
+  const rowRefs = useRef(new Map());
 
   const hindi = tab === "hindi";
   const rows = useMemo(() => {
@@ -90,7 +95,7 @@ export default function Barakhadi() {
   }, [filter, hindi]);
   const heads = hindi ? HINDI_HEADS : ENGLISH_HEADS;
 
-  const cycleView = () => setView((v) => NEXT_VIEW[v]);
+  const showView = (nextView) => setView(nextView);
 
   // Renders a main/sub pair according to the current view (Hindi tab only)
   const pair = (main, sub, mainCls, subCls) => {
@@ -120,9 +125,31 @@ export default function Barakhadi() {
     setSpeechStatus("Audio stopped.");
   };
 
-  useEffect(() => () => {
-    speechRun.current += 1;
-    window.speechSynthesis?.cancel();
+  const toggleFullscreen = async () => {
+    if (!readerRef.current) return;
+    try {
+      if (document.fullscreenElement === readerRef.current) {
+        await document.exitFullscreen();
+      } else if (typeof readerRef.current.requestFullscreen !== "function") {
+        setSpeechStatus("Fullscreen is not supported in this browser.");
+      } else {
+        await readerRef.current.requestFullscreen();
+      }
+    } catch (error) {
+      setSpeechStatus(`Could not change fullscreen mode: ${error.message}`);
+    }
+  };
+
+  useEffect(() => {
+    const updateFullscreen = () => {
+      setIsFullscreen(document.fullscreenElement === readerRef.current);
+    };
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+      speechRun.current += 1;
+      window.speechSynthesis?.cancel();
+    };
   }, []);
 
   const speak = (text, lang) => new Promise((resolve, reject) => {
@@ -222,12 +249,34 @@ export default function Barakhadi() {
     playCell(row.cells[Math.floor(Math.random() * row.cells.length)]); // respects Auto sound
   };
 
+  const goToMatch = () => {
+    const row = rows[0];
+    if (!filter.trim() || !row) {
+      setSpeechStatus("Enter a letter or sound to find.");
+      return;
+    }
+    const query = filter.trim().toLocaleLowerCase();
+    const cell = row.cells.find((item) =>
+      `${item.main} ${item.sub}`.toLocaleLowerCase().includes(query)
+    ) || row.cells[0];
+    rowRefs.current.get(row.label)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setSel(cell);
+    setSpeechStatus(`Showing the ${row.label} row.`);
+  };
+
   return (
-    <div className="bk">
+    <div className="bk" ref={readerRef}>
       <style>{CSS}</style>
       <main>
-        <h1>Barakhadi · बारहखड़ी</h1>
-        <p className="sub">Each letter joined with the 12 vowel forms. Tap any cell to hear it.</p>
+        <div className="header-row">
+          <div>
+            <h1>Barakhadi · बारहखड़ी</h1>
+            <p className="sub">Each letter joined with the 12 vowel forms. Tap any cell to hear it.</p>
+          </div>
+          <button type="button" className="tool-button fullscreen-button" onClick={toggleFullscreen}>
+            {isFullscreen ? "Exit full screen" : "Full screen"}
+          </button>
+        </div>
 
         <div className="tabs" role="tablist">
           <button role="tab" aria-selected={hindi} onClick={() => switchTab("hindi")}>
@@ -243,11 +292,22 @@ export default function Barakhadi() {
             <>
               {pair(sel.main, sel.sub, "showbig", "showsub")}
               {hindi && WORDS[sel.main] && (
-                <div className="word">
-                  {view !== "english" && <span className="wordhi">{WORDS[sel.main][0]}</span>}
-                  {view !== "hindi" && <span className="worden">{WORDS[sel.main][1]}</span>}
-                  <button type="button" className="replay" onClick={() => playWord(WORDS[sel.main][0])}>Hear word</button>
-                </div>
+                <>
+                  <div className="word-visibility-controls" role="group" aria-label="Example word visibility">
+                    <span>Example word:</span>
+                    <button type="button" className="replay" aria-pressed={showHindiWord} onClick={() => setShowHindiWord((visible) => !visible)}>
+                      {showHindiWord ? "Hide Hindi word" : "Show Hindi word"}
+                    </button>
+                    <button type="button" className="replay" aria-pressed={showEnglishWord} onClick={() => setShowEnglishWord((visible) => !visible)}>
+                      {showEnglishWord ? "Hide English meaning" : "Show English meaning"}
+                    </button>
+                  </div>
+                  <div className="word">
+                    {showHindiWord && <span className="wordhi">{WORDS[sel.main][0]}</span>}
+                    {showEnglishWord && <span className="worden">{WORDS[sel.main][1]}</span>}
+                    <button type="button" className="replay" onClick={() => playWord(WORDS[sel.main][0])}>Hear word</button>
+                  </div>
+                </>
               )}
               <button type="button" className="replay" onClick={() => playCell(sel, true)}>Hear selected sound</button>
             </>
@@ -261,14 +321,20 @@ export default function Barakhadi() {
             <span>Find a {hindi ? "Hindi letter" : "English letter"}</span>
             <input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={hindi ? "Try क or kh" : "Try B"} />
           </label>
+          <button type="button" className="tool-button" onClick={goToMatch} disabled={!filter.trim() || !rows.length}>
+            Go to result
+          </button>
           <button type="button" className="tool-button" onClick={practiseRandom} disabled={!rows.length}>Random practice</button>
           <button type="button" className={autoSound ? "tool-button on" : "tool-button"} onClick={toggleAutoSound} aria-pressed={autoSound}>
             Auto sound: {autoSound ? "On" : "Off"}
           </button>
           {hindi && (
-            <button type="button" className="tool-button" onClick={cycleView}>
-              Show: {VIEW_LABELS[view]}
-            </button>
+            <div className="view-toggle" role="group" aria-label="Syllable display">
+              <span>Syllables:</span>
+              <button type="button" className={view === "both" ? "tool-button on" : "tool-button"} onClick={() => showView("both")}>Both</button>
+              <button type="button" className={view === "hindi" ? "tool-button on" : "tool-button"} onClick={() => showView("hindi")}>Hindi</button>
+              <button type="button" className={view === "english" ? "tool-button on" : "tool-button"} onClick={() => showView("english")}>English</button>
+            </div>
           )}
           {speaking && <button type="button" className="tool-button" onClick={stopSpeech}>Stop audio</button>}
         </div>
@@ -286,7 +352,10 @@ export default function Barakhadi() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.label}>
+                <tr key={r.label} ref={(element) => {
+                  if (element) rowRefs.current.set(r.label, element);
+                  else rowRefs.current.delete(r.label);
+                }}>
                   <th scope="row" className="rowhead">
                     {pair(r.label, r.sub, "hm", "hs")}
                     <button type="button" className="row-play" onClick={() => playRow(r)} aria-label={`Hear all sounds in the ${r.label} row`}>Hear row</button>
@@ -326,8 +395,10 @@ background:var(--bg);color:var(--ink);min-height:100vh;font:17px/1.4 "Atkinson H
 @media (prefers-color-scheme:dark){.bk{--bg:#0f1729;--card:#18233b;--ink:#e8eefb;--mute:#9aaac6;--line:#2c3b5c;--acc:#6c96ff;--acc-ink:#0b1226;--hi:#e6b229;--head:#223253}}
 .bk *{box-sizing:border-box}
 .bk main{max-width:980px;margin:0 auto;padding:20px 12px 40px}
+.bk .header-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
 .bk h1{font-size:1.6rem;margin:0 0 4px}
 .bk .sub{color:var(--mute);margin:0 0 14px}
+.bk .fullscreen-button{white-space:nowrap}
 .bk .tabs{display:flex;gap:8px;margin-bottom:14px}
 .bk .tabs button{border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;padding:8px 16px;border-radius:999px;cursor:pointer}
 .bk .tabs button[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700}
@@ -338,12 +409,15 @@ background:var(--bg);color:var(--ink);min-height:100vh;font:17px/1.4 "Atkinson H
 .bk .replay,.bk .tool-button,.bk .row-play{border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;padding:5px 9px;cursor:pointer}
 .bk .replay{align-self:center;margin-top:8px}
 .bk .word{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;margin-top:6px}
+.bk .word-visibility-controls{justify-content:center;margin-top:6px}
 .bk .wordhi{font-size:1.5rem;font-weight:700}
 .bk .worden{color:var(--mute);font-size:1.1rem}
 .bk .word .replay{margin-top:0}
 .bk .tools{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-bottom:8px}
 .bk .search-label{display:grid;gap:4px;min-width:min(100%,240px);margin:0;color:var(--mute);font-size:.82rem}
 .bk .search-label input{min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;padding:6px 10px}
+.bk .view-toggle,.bk .word-visibility-controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.bk .view-toggle>span,.bk .word-visibility-controls>span{color:var(--mute);font-size:.82rem}
 .bk .tool-button{min-height:40px}
 .bk .tool-button.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:700}
 .bk .tool-button:disabled{opacity:.5;cursor:not-allowed}
