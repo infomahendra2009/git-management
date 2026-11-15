@@ -9,7 +9,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validateQuestion, TYPES, DIFFICULTIES } from '../services/questionSchema.js';
 import { createQuestion, updateQuestion, serialize, questionInclude } from '../services/questionStore.js';
 import { audit } from '../services/audit.js';
-import { parseCsv, loadZip, analyze, buildTemplate, exportCsv, MAX_ROWS } from '../services/importer.js';
+import { parseCsv, loadZip, analyze, buildTemplate, exportCsv, regenerateConflictingIds, MAX_ROWS } from '../services/importer.js';
 
 const router = Router();
 router.use(requireAuth, requireRole('ADMIN', 'TEACHER'));
@@ -55,6 +55,7 @@ router.get('/imports', async (req, res) => {
 router.post('/import', upload.fields([{ name: 'csv', maxCount: 1 }, { name: 'images', maxCount: 1 }]), async (req, res) => {
   const csvFile = req.files?.csv?.[0];
   if (!csvFile) return res.status(400).json({ error: 'Please choose a CSV file' });
+  const regenerateIds = req.body.mode === 'regenerate';
   const mode = req.body.mode === 'upsert' ? 'upsert' : 'create';
   const commit = req.body.commit === 'true';
 
@@ -73,7 +74,22 @@ router.post('/import', upload.fields([{ name: 'csv', maxCount: 1 }, { name: 'ima
     ? await prisma.question.findMany({ where: { ownerId: req.user.id, externalId: { in: ids } }, select: { id: true, externalId: true } })
     : [];
   const existingMap = new Map(existing.map((q) => [q.externalId, q.id]));
-  const base = { headers: parsed.headers, rows: parsed.rows, mode, existingIds: new Set(existingMap.keys()), zipImages };
+  const existingIds = new Set(existingMap.keys());
+  let generated = { rows: parsed.rows, generatedIds: [] };
+  if (regenerateIds) {
+    do {
+      generated = regenerateConflictingIds(parsed.rows, existingIds);
+      const candidates = generated.generatedIds.map(({ newId }) => newId);
+      if (!candidates.length) break;
+      const collisions = await prisma.question.findMany({
+        where: { ownerId: req.user.id, externalId: { in: candidates } },
+        select: { externalId: true },
+      });
+      if (!collisions.length) break;
+      collisions.forEach(({ externalId }) => existingIds.add(externalId));
+    } while (true);
+  }
+  const base = { headers: parsed.headers, rows: generated.rows, mode, existingIds, zipImages };
 
   const FAKE = '/api/media/00000000-0000-0000-0000-000000000000';
   const result = analyze({ ...base, urlFor: () => FAKE });
@@ -95,6 +111,7 @@ router.post('/import', upload.fields([{ name: 'csv', maxCount: 1 }, { name: 'ima
       errorCount: result.errors.length,
       warnings: warnings.slice(0, 50),
       preview: result.rows.slice(0, 5),
+      generatedIds: generated.generatedIds,
       canImport: result.errors.length === 0 && result.valid.length > 0,
     });
   }

@@ -84,6 +84,7 @@ export default function Barakhadi() {
   const speechRun = useRef(0);
   const readerRef = useRef(null);
   const rowRefs = useRef(new Map());
+  const pendingRowRef = useRef(null);
 
   const hindi = tab === "hindi";
   const rows = useMemo(() => {
@@ -103,7 +104,8 @@ export default function Barakhadi() {
       return (
         <>
           <span className={mainCls}>{main}</span>
-          {sub && <span className={subCls}>{sub}</span>}
+          {showEnglishWord &&  sub && <span className={subCls}>{sub}</span>}
+         
         </>
       );
     }
@@ -151,6 +153,16 @@ export default function Barakhadi() {
       window.speechSynthesis?.cancel();
     };
   }, []);
+
+  useEffect(() => {
+    const rowLabel = pendingRowRef.current;
+    if (!rowLabel) return;
+    const rowElement = rowRefs.current.get(rowLabel);
+    if (!rowElement) return;
+    rowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    pendingRowRef.current = null;
+    setSpeechStatus(`Showing the ${rowLabel} row.`);
+  }, [rows]);
 
   const speak = (text, lang) => new Promise((resolve, reject) => {
     if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
@@ -264,6 +276,23 @@ export default function Barakhadi() {
     setSpeechStatus(`Showing the ${row.label} row.`);
   };
 
+  const goToSelectedResult = () => {
+    if (!sel) return;
+    const allRows = hindi ? HINDI_ROWS : ENGLISH_ROWS;
+    const row = allRows.find((item) => item.cells.some((cell) => cell.main === sel.main));
+    if (!row) {
+      setSpeechStatus(`Could not find a row for ${sel.main}.`);
+      return;
+    }
+    if (filter.trim()) {
+      pendingRowRef.current = row.label;
+      setFilter("");
+      return;
+    }
+    rowRefs.current.get(row.label)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setSpeechStatus(`Showing the ${row.label} row.`);
+  };
+
   return (
     <div className="bk" ref={readerRef}>
       <style>{CSS}</style>
@@ -310,6 +339,7 @@ export default function Barakhadi() {
                 </>
               )}
               <button type="button" className="replay" onClick={() => playCell(sel, true)}>Hear selected sound</button>
+              <button type="button" className="replay" onClick={goToSelectedResult}>Go to result</button>
             </>
           ) : (
             <span className="showsub">Tap a cell</span>

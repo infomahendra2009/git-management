@@ -60,6 +60,7 @@ export default function ImportCsv({ onImported }) {
         <select value={mode} onChange={(e) => { setMode(e.target.value); setResult(null); }}>
           <option value="create">Report an error (add new questions only)</option>
           <option value="upsert">Update the existing question</option>
+          <option value="regenerate">Generate new IDs and add as new questions</option>
         </select>
         <div style={{ marginTop: 14 }}><button disabled={!csv || busy} onClick={() => send(false)}>{busy ? 'Checking…' : 'Check file (preview)'}</button></div>
         {err && !result && <div className="err">{err}</div>}
@@ -82,6 +83,17 @@ export default function ImportCsv({ onImported }) {
               <ul className="errlist">{result.errors.map((e, i) => <li key={i}>{e.line ? `Row ${e.line}: ` : ''}{e.message}</li>)}</ul>
               {result.errorCount > result.errors.length && <p className="muted">…and {result.errorCount - result.errors.length} more.</p>}
             </>
+          )}
+          {result.generatedIds?.length > 0 && (
+            <div className="card">
+              <strong>Generated IDs for existing questions</strong>
+              <ul>
+                {result.generatedIds.map(({ line, originalId, newId }) => (
+                  <li key={`${line}-${newId}`}>Row {line}: {originalId} → {newId}</li>
+                ))}
+              </ul>
+              <p className="muted">These rows will be added as new questions; existing questions will not be changed.</p>
+            </div>
           )}
           {result.warnings?.length > 0 && <ul className="errlist muted">{result.warnings.map((w, i) => <li key={i}>Warning: {w}</li>)}</ul>}
           {result.preview?.length > 0 && (

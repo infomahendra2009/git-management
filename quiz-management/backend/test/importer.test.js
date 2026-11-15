@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCsv, analyze, buildTemplate, exportCsv } from '../src/services/importer.js';
+import { parseCsv, analyze, buildTemplate, exportCsv, regenerateConflictingIds } from '../src/services/importer.js';
 import { validateQuestion } from '../src/services/questionSchema.js';
 
 // Sample from the requirements document (section 14)
@@ -56,6 +56,27 @@ test('missing required column and existing id handling', () => {
   assert.match(dup.errors[0].message, /already exists/);
   const up = run('question_id,question_type,question_text,points,correct_answer\nQ1,true_false,Hi,1,True\n', 'upsert', ['Q1']);
   assert.equal(up.valid[0].action, 'update');
+});
+
+test('regenerates colliding IDs as unique IDs without changing other rows', () => {
+  const parsed = parseCsv(Buffer.from(
+    'question_id,question_type,question_text,points,correct_answer\n' +
+    'MC001,true_false,First,1,True\n' +
+    'MC001,true_false,Second,1,False\n' +
+    'MC001_NEW1,true_false,Other,1,True\n' +
+    'FRESH,true_false,Fresh,1,True\n'
+  ));
+  const result = regenerateConflictingIds(parsed.rows, new Set(['MC001']));
+
+  assert.deepEqual(result.generatedIds.map(({ originalId, newId }) => [originalId, newId]), [
+    ['MC001', 'MC001_NEW2'],
+    ['MC001', 'MC001_NEW3'],
+  ]);
+  assert.equal(result.rows[2].data.question_id, 'MC001_NEW1');
+  assert.equal(result.rows[3].data.question_id, 'FRESH');
+  const analyzed = analyze({ ...parsed, rows: result.rows, mode: 'create', existingIds: new Set(['MC001']) });
+  assert.deepEqual(analyzed.errors, []);
+  assert.equal(analyzed.valid.length, 4);
 });
 
 test('manual validation rules', () => {

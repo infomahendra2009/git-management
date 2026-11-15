@@ -45,6 +45,33 @@ export function parseCsv(buf) {
   return { headers, rows };
 }
 
+export function regenerateConflictingIds(rows, existingIds) {
+  const reserved = new Set(existingIds);
+  for (const { data } of rows) {
+    const id = str(data.question_id);
+    if (id) reserved.add(id);
+  }
+
+  const generatedIds = [];
+  const updatedRows = rows.map((row) => {
+    const originalId = str(row.data.question_id);
+    if (!originalId || !existingIds.has(originalId)) return row;
+
+    let sequence = 1;
+    let newId;
+    do {
+      const suffix = `_NEW${sequence++}`;
+      newId = `${originalId.slice(0, 60 - suffix.length)}${suffix}`;
+    } while (reserved.has(newId));
+
+    reserved.add(newId);
+    generatedIds.push({ line: row.line, originalId, newId });
+    return { ...row, data: { ...row.data, question_id: newId } };
+  });
+
+  return { rows: updatedRows, generatedIds };
+}
+
 // Reads a ZIP of images. Returns Map(lowercase filename -> {ok, reason, buf, mime, ext}).
 export function loadZip(buf) {
   const zip = new AdmZip(buf);
