@@ -61,9 +61,42 @@ async function owned(req, include) {
 router.get('/', async (req, res) => {
   const rows = await prisma.quiz.findMany({
     where: scope(req), orderBy: { createdAt: 'desc' },
-    include: { _count: { select: { questions: true, attempts: true } }, owner: { select: { name: true } } },
+    include: {
+      _count: { select: { questions: true, attempts: true } },
+      owner: { select: { name: true } },
+      assignments: {
+        include: {
+          class: { include: { members: { include: { student: { select: { id: true, name: true, userCode: true } } } } } },
+          student: { select: { id: true, name: true, userCode: true } },
+        },
+      },
+    },
   });
-  res.json({ quizzes: rows.map((q) => ({ id: q.id, title: q.title, status: q.status, questions: q._count.questions, attempts: q._count.attempts, owner: q.owner.name, createdAt: q.createdAt })) });
+  res.json({
+    quizzes: rows.map((q) => {
+      const classNames = [...new Set(q.assignments.filter((a) => a.class).map((a) => a.class.name))];
+      const studentMap = new Map();
+      q.assignments.forEach((assignment) => {
+        if (assignment.student) studentMap.set(assignment.student.id, assignment.student);
+        assignment.class?.members.forEach((member) => {
+          if (member.student) studentMap.set(member.student.id, member.student);
+        });
+      });
+      return {
+        id: q.id,
+        title: q.title,
+        status: q.status,
+        questions: q._count.questions,
+        attempts: q._count.attempts,
+        owner: q.owner.name,
+        createdAt: q.createdAt,
+        classIds: q.assignments.filter((a) => a.classId).map((a) => a.classId),
+        classNames,
+        studentIds: [...studentMap.keys()],
+        studentNames: [...studentMap.values()].map((student) => student.name),
+      };
+    }),
+  });
 });
 
 router.post('/', async (req, res) => {

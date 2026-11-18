@@ -9,8 +9,8 @@ const toLocal = (iso) => {
 const toIso = (v) => (v ? new Date(v).toISOString() : '');
 
 const DEFAULTS = {
-  title: '', description: '', passPercent: 50, timeLimitMinutes: '', attemptsAllowed: 1, questionOrder: 'SEQUENTIAL',
-  oneAtATime: true, showProgress: true, allowReview: true, releaseMode: 'MANUAL', releaseAt: '',
+  title: '', description: '', passPercent: 50, timeLimitMinutes: 30, attemptsAllowed: 1, questionOrder: 'RANDOM',
+  oneAtATime: true, showProgress: true, allowReview: true, releaseMode: 'IMMEDIATE', releaseAt: '',
   showCorrectAnswers: true, showExplanations: true, startsAt: '', endsAt: '',
 };
 
@@ -122,6 +122,7 @@ function Settings({ s, setS, onSave, busy, isNew }) {
 /* ---------------- Questions picker ---------------- */
 function QuizQuestions({ quizId, initial, locked, onSaved }) {
   const [sel, setSel] = useState(initial);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [pending, setPending] = useState([]);
   const [data, setData] = useState({ items: [], total: 0, page: 1, pageSize: 20 });
   const [categories, setCategories] = useState([]);
@@ -186,6 +187,24 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
     setPending([]);
   };
 
+  const toggleSelected = (id) => setSelectedIds((current) => {
+    const next = new Set(current);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const allSelected = sel.length > 0 && sel.every((item) => selectedIds.has(item.id));
+  const toggleSelectedAll = () => setSelectedIds((current) => {
+    const next = new Set(current);
+    if (allSelected) sel.forEach((item) => next.delete(item.id));
+    else sel.forEach((item) => next.add(item.id));
+    return next;
+  });
+  const removeSelected = () => {
+    if (selectedIds.size === 0 || !confirm(`Remove ${selectedIds.size} selected question${selectedIds.size === 1 ? '' : 's'} from this quiz?`)) return;
+    setSel((current) => current.filter((item) => !selectedIds.has(item.id)));
+    setSelectedIds(new Set());
+  };
+
   const save = async () => {
     setErr(''); setMsg('');
     try { await api(`/quizzes/${quizId}/questions`, { method: 'PUT', body: { questionIds: sel.map((x) => x.id) } }); setMsg('Questions saved.'); onSaved(); }
@@ -197,16 +216,27 @@ function QuizQuestions({ quizId, initial, locked, onSaved }) {
       {locked && <div className="card err">Questions are locked because students have already attempted this quiz.</div>}
       <div className="card">
         <h3>In this quiz: {sel.length} questions · {total} points</h3>
+        <div className="row" style={{ marginBottom: 8 }}>
+          <label className="check picker-check" style={{ margin: 0 }}>
+            <input type="checkbox" checked={allSelected} disabled={locked || sel.length === 0} onChange={toggleSelectedAll} />
+            Select all
+          </label>
+          <button type="button" className="danger small" disabled={locked || selectedIds.size === 0} onClick={removeSelected}>
+            Remove selected{selectedIds.size ? ` (${selectedIds.size})` : ''}
+          </button>
+          {selectedIds.size > 0 && <button type="button" className="secondary small" onClick={() => setSelectedIds(new Set())}>Clear selection</button>}
+        </div>
         <div className="table-wrap">
           <table>
             <tbody>
               {sel.map((x, i) => (
                 <tr key={x.id}>
+                  <td><input type="checkbox" aria-label={`Select assigned question ${i + 1}`} checked={selectedIds.has(x.id)} disabled={locked} onChange={() => toggleSelected(x.id)} /></td>
                   <td>{i + 1}</td><td style={{ whiteSpace: 'normal', minWidth: 200 }}>{x.text || '(image question)'}</td><td>{x.type}</td><td>{x.points} pt</td>
                   <td><div className="row">
                     <button disabled={locked} className="secondary small" onClick={() => move(i, -1)}>↑</button>
                     <button disabled={locked} className="secondary small" onClick={() => move(i, 1)}>↓</button>
-                    <button disabled={locked} className="danger small" onClick={() => setSel(sel.filter((y) => y.id !== x.id))}>Remove</button>
+                    <button disabled={locked} className="danger small" onClick={() => { setSel(sel.filter((y) => y.id !== x.id)); setSelectedIds((current) => { const next = new Set(current); next.delete(x.id); return next; }); }}>Remove</button>
                   </div></td>
                 </tr>
               ))}
@@ -438,23 +468,52 @@ export default function Quizzes({ user }) {
   const [view, setView] = useState({ name: 'list' });
   const [rows, setRows] = useState([]);
   const [err, setErr] = useState('');
+  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [classFilter, setClassFilter] = useState('');
+  const [studentFilter, setStudentFilter] = useState('');
   const load = () => api('/quizzes').then((r) => setRows(r.quizzes)).catch((e) => setErr(e.message));
-  useEffect(() => { if (view.name === 'list') load(); }, [view.name]);
+  useEffect(() => {
+    if (view.name !== 'list') return;
+    load();
+    api('/classes').then((r) => setClasses(r.classes)).catch((e) => setErr(e.message));
+    api('/users?role=STUDENT').then((r) => setStudents(r.users.filter((student) => student.isActive))).catch((e) => setErr(e.message));
+  }, [view.name]);
 
   const act = async (fn) => { try { await fn(); load(); } catch (e) { setErr(e.message); } };
+  const filteredRows = rows.filter((row) => (
+    (!classFilter || row.classIds?.includes(classFilter))
+    && (!studentFilter || row.studentIds?.includes(studentFilter))
+  ));
 
   if (view.name === 'edit') return <QuizEditor key={view.id || 'new'} id={view.id} onBack={() => setView({ name: 'list' })} />;
   return (
     <div className="card">
       <div className="row" style={{ justifyContent: 'space-between' }}><h3 style={{ margin: 0 }}>Quizzes</h3><button onClick={() => setView({ name: 'edit' })}>+ New quiz</button></div>
       {err && <div className="err">{err}</div>}
+      <div className="row" style={{ marginTop: 12 }}>
+        <select aria-label="Filter by class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+          <option value="">All classes</option>
+          {classes.map((klass) => <option key={klass.id} value={klass.id}>{klass.name}</option>)}
+        </select>
+        <select aria-label="Filter by student" value={studentFilter} onChange={(e) => setStudentFilter(e.target.value)}>
+          <option value="">All students</option>
+          {students.map((student) => <option key={student.id} value={student.id}>{student.name}{student.userCode ? ` (${student.userCode})` : ''}</option>)}
+        </select>
+        {(classFilter || studentFilter) && <button className="secondary small" onClick={() => { setClassFilter(''); setStudentFilter(''); }}>Clear filters</button>}
+      </div>
       <div className="table-wrap" style={{ marginTop: 12 }}>
         <table>
-          <thead><tr><th>Title</th><th>Status</th><th>Questions</th><th>Attempts</th>{user.role === 'ADMIN' && <th>Owner</th>}<th></th></tr></thead>
+          <thead><tr><th>Title</th><th>Status</th><th>Class</th><th>Student</th><th>Questions</th><th>Attempts</th>{user.role === 'ADMIN' && <th>Owner</th>}<th></th></tr></thead>
           <tbody>
-            {rows.map((r) => (
+            {filteredRows.map((r) => (
               <tr key={r.id}>
-                <td>{r.title}</td><td><span className={`badge ${r.status === 'PUBLISHED' ? '' : 'off'}`}>{r.status === 'PUBLISHED' ? 'Published' : 'Draft'}</span></td><td>{r.questions}</td><td>{r.attempts}</td>
+                <td>{r.title}</td>
+                <td><span className={`badge ${r.status === 'PUBLISHED' ? '' : 'off'}`}>{r.status === 'PUBLISHED' ? 'Published' : 'Draft'}</span></td>
+                <td>{r.classNames?.length ? r.classNames.join(', ') : '—'}</td>
+                <td>{r.studentNames?.length ? r.studentNames.join(', ') : '—'}</td>
+                <td>{r.questions}</td>
+                <td>{r.attempts}</td>
                 {user.role === 'ADMIN' && <td>{r.owner}</td>}
                 <td><div className="row">
                   <button className="secondary small" onClick={() => setView({ name: 'edit', id: r.id })}>Open</button>
@@ -464,7 +523,7 @@ export default function Quizzes({ user }) {
                 </div></td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="muted">No quizzes yet</td></tr>}
+            {filteredRows.length === 0 && <tr><td colSpan={user.role === 'ADMIN' ? 8 : 7} className="muted">No quizzes match the filters</td></tr>}
           </tbody>
         </table>
       </div>

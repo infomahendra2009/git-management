@@ -216,6 +216,40 @@ router.delete('/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+router.post('/bulk-delete', async (req, res) => {
+  const ids = Array.isArray(req.body?.ids)
+    ? [...new Set(req.body.ids.map((id) => String(id)).filter((id) => id))]
+    : [];
+  if (!ids.length) return res.status(400).json({ error: 'Select at least one question to delete.' });
+
+  const owned = await prisma.question.findMany({
+    where: { id: { in: ids }, ...scope(req) },
+    select: { id: true },
+  });
+  const ownedIds = owned.map((question) => question.id);
+  const inUse = await prisma.quizQuestion.findMany({
+    where: { questionId: { in: ownedIds } },
+    select: { questionId: true },
+    distinct: ['questionId'],
+  });
+  const inUseIds = new Set(inUse.map((question) => question.questionId));
+  const deletableIds = ownedIds.filter((id) => !inUseIds.has(id));
+
+  if (deletableIds.length) {
+    await prisma.question.deleteMany({ where: { id: { in: deletableIds }, ...scope(req) } });
+  }
+
+  const deleted = deletableIds.length;
+  const blocked = inUseIds.size;
+  if (deleted > 0) {
+    await audit(req.user.id, 'QUESTIONS_BULK_DELETED', {
+      targetType: 'Question',
+      meta: { deleted, blocked, skippedIds: [...inUseIds].slice(0, 100) },
+    });
+  }
+  res.json({ ok: true, deleted, blocked });
+});
+
 router.post('/:id/duplicate', async (req, res) => {
   const src = await findOwned(req);
   if (!src) return res.status(404).json({ error: 'Question not found' });
